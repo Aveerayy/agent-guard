@@ -1,4 +1,4 @@
-"""AutoGen integration — governance for Microsoft AutoGen agents.
+"""AutoGen integration — governance for AutoGen multi-agent systems.
 
 Usage:
     from agent_guard import Guard, Policy

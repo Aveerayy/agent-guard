@@ -56,10 +56,9 @@ dev = [
 agent-guard = "agent_guard.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/agent-guard/agent-guard"
-Documentation = "https://agent-guard.dev"
-Repository = "https://github.com/agent-guard/agent-guard"
-Issues = "https://github.com/agent-guard/agent-guard/issues"
+Homepage = "https://github.com/Aveerayy/agent-guard"
+Repository = "https://github.com/Aveerayy/agent-guard"
+Issues = "https://github.com/Aveerayy/agent-guard/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent_guard"]

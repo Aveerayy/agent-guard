@@ -18,3 +18,4 @@ ENV/
 .coverage
 htmlcov/
 policies/
+marketing/
