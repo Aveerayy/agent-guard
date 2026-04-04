@@ -1,0 +1,8 @@
+- id: validate-policy
+  name: Validate Agent Guard policy YAML
+  description: Validate governance policy YAML files
+  entry: python -m agent_guard.cli.app validate
+  language: python
+  files: '\.ya?ml$'
+  types: [yaml]
+  additional_dependencies: ["agent-guard"]

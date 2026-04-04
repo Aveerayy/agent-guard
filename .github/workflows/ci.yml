@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short --cov=agent_guard --cov-report=term-missing
+
+      - name: Run governance attestation
+        run: python -c "from agent_guard import GovernanceVerifier; v = GovernanceVerifier(); a = v.verify(); print(f'OWASP Coverage: {a.coverage_score:.0%}'); assert a.fully_compliant"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check src/ tests/
+      - run: ruff format --check src/ tests/
+
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -e ".[dev]"
+          mypy src/agent_guard/ --ignore-missing-imports
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          pip install -e ".[dev]"
+          python -c "
+          from agent_guard import IntegrityVerifier
+          v = IntegrityVerifier()
+          assert v.quick_check(), 'Integrity check failed'
+          print('✓ All governance modules verified')
+          "
