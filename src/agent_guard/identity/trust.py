@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import time
 import threading
+import time
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -76,9 +76,7 @@ class TrustEngine:
     def get_score(self, agent_id: str) -> TrustScore:
         with self._lock:
             if agent_id not in self._scores:
-                ts = TrustScore(
-                    agent_id=agent_id, score=self._initial_score
-                )
+                ts = TrustScore(agent_id=agent_id, score=self._initial_score)
                 ts._update_level()
                 self._scores[agent_id] = ts
             return self._scores[agent_id]

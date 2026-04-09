@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-import time
 import threading
+import time
+from collections.abc import Callable
 from enum import Enum
 from typing import Any
-from collections.abc import Callable
 
 
 class CircuitState(str, Enum):
-    CLOSED = "closed"       # Normal operation
-    OPEN = "open"           # Failing — reject calls
-    HALF_OPEN = "half_open" # Testing recovery
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing — reject calls
+    HALF_OPEN = "half_open"  # Testing recovery
 
 
 class CircuitBreaker:
@@ -66,11 +66,13 @@ class CircuitBreaker:
     @property
     def state(self) -> CircuitState:
         with self._lock:
-            if self._state == CircuitState.OPEN:
-                if time.time() - self._last_failure_time >= self.recovery_time:
-                    self._state = CircuitState.HALF_OPEN
-                    self._half_open_calls = 0
-                    self._success_count = 0
+            if (
+                self._state == CircuitState.OPEN
+                and time.time() - self._last_failure_time >= self.recovery_time
+            ):
+                self._state = CircuitState.HALF_OPEN
+                self._half_open_calls = 0
+                self._success_count = 0
             return self._state
 
     def record_success(self) -> None:
@@ -125,27 +127,25 @@ class CircuitBreaker:
 
     def protect(self, fn: Callable) -> Callable:
         """Decorator to protect a function with this circuit breaker."""
+
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             if not self.allow_request():
-                raise CircuitOpenError(
-                    f"Circuit breaker '{self.name}' is OPEN — call rejected"
-                )
+                raise CircuitOpenError(f"Circuit breaker '{self.name}' is OPEN — call rejected")
             try:
                 result = fn(*args, **kwargs)
                 self.record_success()
                 return result
-            except Exception as e:
+            except Exception:
                 self.record_failure()
                 raise
+
         wrapper.__name__ = fn.__name__
         wrapper.__doc__ = fn.__doc__
         return wrapper
 
     def __enter__(self) -> CircuitBreaker:
         if not self.allow_request():
-            raise CircuitOpenError(
-                f"Circuit breaker '{self.name}' is OPEN — call rejected"
-            )
+            raise CircuitOpenError(f"Circuit breaker '{self.name}' is OPEN — call rejected")
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
@@ -169,4 +169,5 @@ class CircuitBreaker:
 
 class CircuitOpenError(Exception):
     """Raised when a call is rejected because the circuit breaker is open."""
+
     pass

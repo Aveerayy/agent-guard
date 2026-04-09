@@ -1,7 +1,8 @@
 """Tests for circuit breaker and SLO."""
 
 import pytest
-from agent_guard import CircuitBreaker, SLO
+
+from agent_guard import SLO, CircuitBreaker
 from agent_guard.reliability.circuit_breaker import CircuitOpenError, CircuitState
 
 
@@ -31,17 +32,15 @@ class TestCircuitBreaker:
 
     def test_context_manager_failure(self):
         cb = CircuitBreaker("test", failure_threshold=5)
-        with pytest.raises(ValueError):
-            with cb:
-                raise ValueError("boom")
+        with pytest.raises(ValueError), cb:
+            raise ValueError("boom")
         assert cb._total_failures == 1
 
     def test_context_manager_rejects_when_open(self):
         cb = CircuitBreaker("test", failure_threshold=1)
         cb.record_failure()
-        with pytest.raises(CircuitOpenError):
-            with cb:
-                pass
+        with pytest.raises(CircuitOpenError), cb:
+            pass
 
     def test_decorator(self):
         cb = CircuitBreaker("test")

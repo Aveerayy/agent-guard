@@ -1,7 +1,7 @@
 """Tests for observability bus and hooks."""
 
-from agent_guard import ObservabilityBus, GuardEvent
-from agent_guard.observability.hooks import logging_handler, metrics_collector
+from agent_guard import GuardEvent, ObservabilityBus
+from agent_guard.observability.hooks import metrics_collector
 
 
 class TestObservabilityBus:

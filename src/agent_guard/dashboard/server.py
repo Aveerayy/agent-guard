@@ -10,15 +10,13 @@ import json
 import threading
 import time
 import webbrowser
-from functools import partial
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any
 
-from agent_guard.core.engine import Guard
 from agent_guard.audit.logger import AuditLog
+from agent_guard.core.engine import Guard
 from agent_guard.mcp.gateway import MCPGateway
-
 
 _DASHBOARD_HTML = (Path(__file__).parent / "index.html").read_bytes
 

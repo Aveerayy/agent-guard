@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
-from agent_guard.core.policy import Policy, Effect
 from agent_guard.core.engine import Guard
-from agent_guard.policies.builtin import list_builtins, get_builtin, BUILTIN_POLICIES
+from agent_guard.core.policy import Effect, Policy
+from agent_guard.policies.builtin import get_builtin, list_builtins
 from agent_guard.policies.loader import load_policies
 
 console = Console()
@@ -29,24 +28,26 @@ def main() -> None:
 @main.command()
 def info() -> None:
     """Show Agent Guard info and capabilities."""
-    console.print(Panel.fit(
-        "[bold cyan]Agent Guard[/bold cyan] v0.2.0\n\n"
-        "Simple, powerful governance for AI agents.\n\n"
-        "[bold]Capabilities:[/bold]\n"
-        "  • Policy engine with YAML rules & fluent Python API\n"
-        "  • Ed25519 agent identity & trust scoring\n"
-        "  • Execution sandboxing with permission levels\n"
-        "  • Hash-chained audit logging\n"
-        "  • Agent-to-agent secure mesh\n"
-        "  • Runtime injection detection on tool arguments\n"
-        "  • Output PII/secrets filtering & redaction\n"
-        "  • Real-time web dashboard\n"
-        "  • Circuit breakers & SLO tracking\n"
-        "  • LangChain, OpenAI, CrewAI, AutoGen integrations\n\n"
-        "[bold]OWASP Agentic Top 10:[/bold] 10/10 risks covered",
-        title="About",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold cyan]Agent Guard[/bold cyan] v0.2.0\n\n"
+            "Simple, powerful governance for AI agents.\n\n"
+            "[bold]Capabilities:[/bold]\n"
+            "  • Policy engine with YAML rules & fluent Python API\n"
+            "  • Ed25519 agent identity & trust scoring\n"
+            "  • Execution sandboxing with permission levels\n"
+            "  • Hash-chained audit logging\n"
+            "  • Agent-to-agent secure mesh\n"
+            "  • Runtime injection detection on tool arguments\n"
+            "  • Output PII/secrets filtering & redaction\n"
+            "  • Real-time web dashboard\n"
+            "  • Circuit breakers & SLO tracking\n"
+            "  • LangChain, OpenAI, CrewAI, AutoGen integrations\n\n"
+            "[bold]OWASP Agentic Top 10:[/bold] 10/10 risks covered",
+            title="About",
+            border_style="cyan",
+        )
+    )
 
 
 @main.command(name="policies")
@@ -113,11 +114,15 @@ def validate(path: str) -> None:
     try:
         policies = load_policies(path)
         for policy in policies:
-            console.print(f"[green]✓[/green] [bold]{policy.name}[/bold]: "
-                          f"{len(policy.rules)} rules, default={policy.default_effect.value}")
+            console.print(
+                f"[green]✓[/green] [bold]{policy.name}[/bold]: "
+                f"{len(policy.rules)} rules, default={policy.default_effect.value}"
+            )
             for rule in policy.rules:
-                icon = "✅" if rule.effect == Effect.ALLOW else (
-                    "🔍" if rule.effect == Effect.AUDIT else "🚫"
+                icon = (
+                    "✅"
+                    if rule.effect == Effect.ALLOW
+                    else ("🔍" if rule.effect == Effect.AUDIT else "🚫")
                 )
                 console.print(f"  {icon} {rule.name or rule.action}: {rule.effect.value}")
         console.print(f"\n[green bold]All {len(policies)} policies valid.[/green bold]")
@@ -143,17 +148,19 @@ def test(policy_path: str, action: str, agent_id: str) -> None:
     else:
         icon = "[red bold]✗ DENIED[/red bold]"
 
-    console.print(Panel(
-        f"{icon}\n\n"
-        f"[bold]Action:[/bold] {action}\n"
-        f"[bold]Agent:[/bold] {agent_id}\n"
-        f"[bold]Effect:[/bold] {decision.effect.value}\n"
-        f"[bold]Rule:[/bold] {decision.matched_rule}\n"
-        f"[bold]Reason:[/bold] {decision.reason}\n"
-        f"[bold]Time:[/bold] {decision.evaluation_time_ms:.4f} ms",
-        title="Policy Test Result",
-        border_style="green" if decision.allowed else "red",
-    ))
+    console.print(
+        Panel(
+            f"{icon}\n\n"
+            f"[bold]Action:[/bold] {action}\n"
+            f"[bold]Agent:[/bold] {agent_id}\n"
+            f"[bold]Effect:[/bold] {decision.effect.value}\n"
+            f"[bold]Rule:[/bold] {decision.matched_rule}\n"
+            f"[bold]Reason:[/bold] {decision.reason}\n"
+            f"[bold]Time:[/bold] {decision.evaluation_time_ms:.4f} ms",
+            title="Policy Test Result",
+            border_style="green" if decision.allowed else "red",
+        )
+    )
 
 
 @main.command()
@@ -166,17 +173,21 @@ def identity(name: str, role: str) -> None:
     agent = AgentIdentity.create(name, role=role)
     card = agent.to_card()
 
-    console.print(Panel(
-        f"[bold]Agent ID:[/bold] {card['agent_id']}\n"
-        f"[bold]Role:[/bold] {card['role']}\n"
-        f"[bold]Fingerprint:[/bold] {card['fingerprint']}\n"
-        f"[bold]Public Key:[/bold] {card['public_key'][:32]}...",
-        title="New Agent Identity",
-        border_style="cyan",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Agent ID:[/bold] {card['agent_id']}\n"
+            f"[bold]Role:[/bold] {card['role']}\n"
+            f"[bold]Fingerprint:[/bold] {card['fingerprint']}\n"
+            f"[bold]Public Key:[/bold] {card['public_key'][:32]}...",
+            title="New Agent Identity",
+            border_style="cyan",
+        )
+    )
 
-    console.print("\n[dim]Private key generated in memory. "
-                  "Use identity.export_private_key_pem() to save.[/dim]")
+    console.print(
+        "\n[dim]Private key generated in memory. "
+        "Use identity.export_private_key_pem() to save.[/dim]"
+    )
 
 
 @main.command()
@@ -217,8 +228,10 @@ def dashboard(host: str, port: int, no_browser: bool) -> None:
     guard = Guard()
     guard.add_policy(Policy.standard())
 
-    console.print(f"[cyan bold]Agent Guard Dashboard[/cyan bold] starting on "
-                  f"[underline]http://{host}:{port}[/underline]")
+    console.print(
+        f"[cyan bold]Agent Guard Dashboard[/cyan bold] starting on "
+        f"[underline]http://{host}:{port}[/underline]"
+    )
     console.print("[dim]Press Ctrl+C to stop[/dim]\n")
 
     run_dashboard(guard, host=host, port=port, open_browser=not no_browser)
@@ -232,6 +245,7 @@ def init() -> None:
 
     policy = Policy.standard()
     import yaml
+
     data = {
         "name": policy.name,
         "description": policy.description,
@@ -256,6 +270,6 @@ def init() -> None:
     console.print("\n[bold]Next steps:[/bold]")
     console.print("  1. Edit policies/standard.yaml to customize rules")
     console.print("  2. Add to your agent code:")
-    console.print('     [cyan]from agent_guard import Guard[/cyan]')
-    console.print('     [cyan]guard = Guard()[/cyan]')
+    console.print("     [cyan]from agent_guard import Guard[/cyan]")
+    console.print("     [cyan]guard = Guard()[/cyan]")
     console.print('     [cyan]guard.load_policy("policies/standard.yaml")[/cyan]')

@@ -1,9 +1,8 @@
 """Tests for output PII/secrets filter."""
 
-import pytest
 from agent_guard.filters.output_filter import (
-    OutputFilter,
     FilterAction,
+    OutputFilter,
     SensitiveDataType,
 )
 
@@ -63,7 +62,10 @@ class TestSecretDetection:
 
     def test_detects_jwt(self):
         filt = OutputFilter()
-        jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"
+        jwt = (
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+            "eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"
+        )
         result = filt.scan(f"Auth: {jwt}")
         assert result.has_findings
         assert any(f.data_type == SensitiveDataType.JWT for f in result.findings)
@@ -131,10 +133,12 @@ class TestFilterActions:
 
     def test_scan_dict(self):
         filt = OutputFilter()
-        result = filt.scan_dict({
-            "response": "Contact admin@example.com",
-            "nested": {"data": "Key: AKIAIOSFODNN7EXAMPLE"},
-        })
+        result = filt.scan_dict(
+            {
+                "response": "Contact admin@example.com",
+                "nested": {"data": "Key: AKIAIOSFODNN7EXAMPLE"},
+            }
+        )
         assert result.has_findings
         assert result.pii_count >= 1
         assert result.secret_count >= 1
@@ -142,9 +146,11 @@ class TestFilterActions:
 
 class TestCustomPatterns:
     def test_custom_pattern(self):
-        filt = OutputFilter(custom_patterns=[
-            (r"INTERNAL-\d{6}", SensitiveDataType.CUSTOM, 1.0),
-        ])
+        filt = OutputFilter(
+            custom_patterns=[
+                (r"INTERNAL-\d{6}", SensitiveDataType.CUSTOM, 1.0),
+            ]
+        )
         result = filt.scan("Ref: INTERNAL-123456")
         assert result.has_findings
         assert any(f.data_type == SensitiveDataType.CUSTOM for f in result.findings)

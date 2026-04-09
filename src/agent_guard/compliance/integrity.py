@@ -6,7 +6,6 @@ import hashlib
 import importlib
 import inspect
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -88,12 +87,14 @@ class IntegrityVerifier:
                 verified = actual_hash == expected_hash
                 if not verified:
                     all_valid = False
-                hashes.append(ModuleHash(
-                    module=module_name,
-                    file_path=source_file,
-                    sha256=actual_hash,
-                    verified=verified,
-                ))
+                hashes.append(
+                    ModuleHash(
+                        module=module_name,
+                        file_path=source_file,
+                        sha256=actual_hash,
+                        verified=verified,
+                    )
+                )
             except (ImportError, TypeError, OSError):
                 all_valid = False
                 hashes.append(ModuleHash(module=module_name, verified=False))

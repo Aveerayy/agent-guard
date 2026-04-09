@@ -6,8 +6,8 @@ any telemetry backend (OTel, Prometheus, Datadog, custom) with zero coupling.
 
 from __future__ import annotations
 
-import time
 import logging
+import time
 from collections.abc import Callable
 from typing import Any, ClassVar
 
@@ -115,8 +115,11 @@ class ObservabilityBus:
 def logging_handler(event: GuardEvent) -> None:
     """Built-in handler that logs all events to Python logging."""
     level = logging.WARNING if event.allowed is False else logging.INFO
-    logger.log(level, f"[{event.event_type}] agent={event.agent_id} action={event.action} "
-               f"allowed={event.allowed} duration={event.duration_ms:.2f}ms")
+    logger.log(
+        level,
+        f"[{event.event_type}] agent={event.agent_id} action={event.action} "
+        f"allowed={event.allowed} duration={event.duration_ms:.2f}ms",
+    )
 
 
 def metrics_collector() -> tuple[EventHandler, Callable[[], dict[str, Any]]]:

@@ -1,7 +1,8 @@
 """Tests for the core policy engine."""
 
 import pytest
-from agent_guard import Guard, Policy, PolicyDecision, Effect, Action, ActionType
+
+from agent_guard import Action, Effect, Guard, Policy, PolicyDecision
 
 
 class TestPolicy:
@@ -53,9 +54,7 @@ rules:
         assert not guard.check("shell_exec")
 
     def test_agent_specific_rules(self):
-        policy = Policy(default_effect=Effect.DENY).allow(
-            "web_search", agents=["researcher"]
-        )
+        policy = Policy(default_effect=Effect.DENY).allow("web_search", agents=["researcher"])
         guard = Guard(policies=[policy])
         assert guard.check("web_search", agent_id="researcher")
         assert not guard.check("web_search", agent_id="writer")
@@ -69,6 +68,7 @@ rules:
 
     def test_conditions(self):
         from agent_guard.core.policy import Condition
+
         policy = Policy(default_effect=Effect.DENY).allow(
             "api_call",
             conditions=[Condition(field="parameters.safe", operator="equals", value=True)],

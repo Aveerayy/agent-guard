@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import time
 import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -213,10 +213,11 @@ class Guard:
     ) -> Callable:
         """Decorator that enforces governance before function execution.
 
-            @guard.govern("web_search")
-            def search(query: str):
-                ...
+        @guard.govern("web_search")
+        def search(query: str):
+            ...
         """
+
         def decorator(fn: Callable) -> Callable:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 decision = self.evaluate(
@@ -227,14 +228,14 @@ class Guard:
                 )
                 if not decision.allowed:
                     if raise_on_deny:
-                        raise PermissionError(
-                            f"Action '{action_name}' denied: {decision.reason}"
-                        )
+                        raise PermissionError(f"Action '{action_name}' denied: {decision.reason}")
                     return None
                 return fn(*args, **kwargs)
+
             wrapper.__name__ = fn.__name__
             wrapper.__doc__ = fn.__doc__
             return wrapper
+
         return decorator
 
     # --- Session context ---
@@ -257,9 +258,7 @@ class Guard:
         total = len(self._history)
         allowed = sum(1 for d in self._history if d.allowed)
         denied = total - allowed
-        avg_ms = (
-            sum(d.evaluation_time_ms for d in self._history) / total if total else 0
-        )
+        avg_ms = sum(d.evaluation_time_ms for d in self._history) / total if total else 0
         return {
             "total_evaluations": total,
             "allowed": allowed,

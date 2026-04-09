@@ -1,6 +1,6 @@
 """Tests for compliance attestation and integrity verification."""
 
-from agent_guard import GovernanceVerifier, GovernanceAttestation, IntegrityVerifier
+from agent_guard import GovernanceVerifier, IntegrityVerifier
 
 
 class TestGovernanceVerifier:
@@ -37,6 +37,7 @@ class TestGovernanceVerifier:
         verifier.export_attestation(attestation, out)
         assert out.exists()
         import json
+
         data = json.loads(out.read_text())
         assert data["coverage_score"] == 1.0
 

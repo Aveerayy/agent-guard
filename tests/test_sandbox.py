@@ -1,7 +1,6 @@
 """Tests for sandbox execution."""
 
-from agent_guard import Sandbox, PermissionLevel
-from agent_guard.sandbox.executor import SandboxResult
+from agent_guard import PermissionLevel, Sandbox
 
 
 class TestSandbox:
@@ -47,8 +46,10 @@ class TestSandbox:
 
     def test_exec_function_error(self):
         sandbox = Sandbox(permission_level=PermissionLevel.STANDARD)
+
         def bad_func():
             raise RuntimeError("fail")
+
         result = sandbox.exec_function(bad_func)
         assert not result.success
         assert "fail" in result.error

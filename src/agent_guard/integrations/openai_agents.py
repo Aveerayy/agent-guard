@@ -19,8 +19,8 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from agent_guard.core.engine import Guard
 from agent_guard.audit.logger import AuditLog
+from agent_guard.core.engine import Guard
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +52,7 @@ def govern_openai_tool(
 
             if not decision.allowed:
                 logger.warning(f"Blocked '{action_name}': {decision.reason}")
-                raise PermissionError(
-                    f"Agent Guard blocked '{action_name}': {decision.reason}"
-                )
+                raise PermissionError(f"Agent Guard blocked '{action_name}': {decision.reason}")
 
             return fn(*args, **kwargs)
 
@@ -89,18 +87,14 @@ class OpenAIGovernanceMiddleware:
         self.agent_id = agent_id
         self.audit = audit_log or AuditLog()
 
-    def before_tool_call(
-        self, tool_name: str, parameters: dict[str, Any] | None = None
-    ) -> Any:
+    def before_tool_call(self, tool_name: str, parameters: dict[str, Any] | None = None) -> Any:
         decision = self.guard.evaluate(
             tool_name, agent_id=self.agent_id, parameters=parameters or {}
         )
         self.audit.log_decision(decision)
         return decision
 
-    def after_tool_call(
-        self, tool_name: str, *, success: bool = True, error: str = ""
-    ) -> None:
+    def after_tool_call(self, tool_name: str, *, success: bool = True, error: str = "") -> None:
         event_type = "tool_success" if success else "tool_error"
         self.audit.log(
             event_type,

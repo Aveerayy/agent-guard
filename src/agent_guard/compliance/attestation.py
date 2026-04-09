@@ -10,7 +10,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-
 OWASP_ASI_CONTROLS = {
     "ASI-01": {
         "risk": "Agent Goal Hijacking",
@@ -117,15 +116,19 @@ class GovernanceVerifier:
             if is_implemented:
                 implemented += 1
 
-            controls.append(ControlStatus(
-                control_id=control_id,
-                risk=info["risk"],
-                control=info["control"],
-                module=info["module"],
-                implemented=is_implemented,
-                verified=is_implemented,
-                evidence=f"Module {info['module']} importable" if is_implemented else "Module not found",
-            ))
+            controls.append(
+                ControlStatus(
+                    control_id=control_id,
+                    risk=info["risk"],
+                    control=info["control"],
+                    module=info["module"],
+                    implemented=is_implemented,
+                    verified=is_implemented,
+                    evidence=f"Module {info['module']} importable"
+                    if is_implemented
+                    else "Module not found",
+                )
+            )
 
         attestation = GovernanceAttestation(
             controls=controls,
@@ -144,13 +147,17 @@ class GovernanceVerifier:
             return False
 
     def _compute_hash(self, attestation: GovernanceAttestation) -> str:
-        data = json.dumps({
-            "framework": attestation.framework,
-            "version": attestation.framework_version,
-            "timestamp": attestation.timestamp,
-            "controls": [c.control_id for c in attestation.controls if c.implemented],
-            "coverage": attestation.coverage_score,
-        }, sort_keys=True, separators=(",", ":"))
+        data = json.dumps(
+            {
+                "framework": attestation.framework,
+                "version": attestation.framework_version,
+                "timestamp": attestation.timestamp,
+                "controls": [c.control_id for c in attestation.controls if c.implemented],
+                "coverage": attestation.coverage_score,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
         return hashlib.sha256(data.encode()).hexdigest()
 
     def export_attestation(
@@ -168,7 +175,9 @@ class GovernanceVerifier:
             "framework": attestation.framework,
             "version": attestation.framework_version,
             "owasp_coverage": f"{attestation.coverage_score:.0%}",
-            "controls_implemented": f"{attestation.implemented_controls}/{attestation.total_controls}",
+            "controls_implemented": (
+                f"{attestation.implemented_controls}/{attestation.total_controls}"
+            ),
             "fully_compliant": attestation.fully_compliant,
             "hash": attestation.hash[:16] + "...",
         }

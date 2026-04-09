@@ -25,17 +25,20 @@ class Condition(BaseModel):
     """A condition that must be true for a rule to apply."""
 
     field: str = Field(description="Dot-path into the action, e.g. 'parameters.query'")
-    operator: str = Field(default="equals", description="One of: equals, not_equals, contains, "
-                          "not_contains, matches, gt, lt, gte, lte, in, not_in, exists")
+    operator: str = Field(
+        default="equals",
+        description="One of: equals, not_equals, contains, "
+        "not_contains, matches, gt, lt, gte, lte, in, not_in, exists",
+    )
     value: Any = None
 
     def evaluate(self, action: Action) -> bool:
         actual = self._resolve(action)
         op = self.operator
         if op == "equals":
-            return actual == self.value
+            return bool(actual == self.value)
         if op == "not_equals":
-            return actual != self.value
+            return bool(actual != self.value)
         if op == "contains":
             return self.value in actual if actual else False
         if op == "not_contains":
@@ -131,15 +134,17 @@ class Policy(BaseModel):
         reason: str = "",
     ) -> Policy:
         """Fluent API: add a rule and return self for chaining."""
-        self.rules.append(PolicyRule(
-            name=name or f"{effect.value}_{action}",
-            action=action,
-            effect=effect,
-            agents=agents,
-            conditions=conditions or [],
-            priority=priority,
-            reason=reason,
-        ))
+        self.rules.append(
+            PolicyRule(
+                name=name or f"{effect.value}_{action}",
+                action=action,
+                effect=effect,
+                agents=agents,
+                conditions=conditions or [],
+                priority=priority,
+                reason=reason,
+            )
+        )
         return self
 
     def allow(self, action: str, **kwargs: Any) -> Policy:
@@ -175,16 +180,18 @@ class Policy(BaseModel):
         rules = []
         for r in data.get("rules", []):
             conditions = [Condition(**c) for c in r.get("conditions", [])]
-            rules.append(PolicyRule(
-                name=r.get("name", ""),
-                action=r.get("action", "*"),
-                effect=Effect(r.get("effect", "deny")),
-                action_types=[ActionType(t) for t in r.get("action_types", [])] or None,
-                agents=r.get("agents"),
-                conditions=conditions,
-                priority=r.get("priority", 0),
-                reason=r.get("reason", ""),
-            ))
+            rules.append(
+                PolicyRule(
+                    name=r.get("name", ""),
+                    action=r.get("action", "*"),
+                    effect=Effect(r.get("effect", "deny")),
+                    action_types=[ActionType(t) for t in r.get("action_types", [])] or None,
+                    agents=r.get("agents"),
+                    conditions=conditions,
+                    priority=r.get("priority", 0),
+                    reason=r.get("reason", ""),
+                )
+            )
         return cls(
             name=data.get("name", "default"),
             description=data.get("description", ""),
@@ -196,12 +203,14 @@ class Policy(BaseModel):
     @classmethod
     def permissive(cls) -> Policy:
         """A starter policy that allows everything but audits shell and file writes."""
-        return cls(
-            name="permissive",
-            description="Allow everything, audit dangerous actions",
-            default_effect=Effect.ALLOW,
-        ).audit("shell_exec", reason="Shell execution audited").audit(
-            "file_write", reason="File writes audited"
+        return (
+            cls(
+                name="permissive",
+                description="Allow everything, audit dangerous actions",
+                default_effect=Effect.ALLOW,
+            )
+            .audit("shell_exec", reason="Shell execution audited")
+            .audit("file_write", reason="File writes audited")
         )
 
     @classmethod
@@ -216,22 +225,17 @@ class Policy(BaseModel):
     @classmethod
     def standard(cls) -> Policy:
         """A balanced policy suitable for most use cases."""
-        return cls(
-            name="standard",
-            description="Balanced governance: common tools allowed, dangerous actions denied",
-            default_effect=Effect.DENY,
-        ).allow(
-            "web_search", reason="Search is safe"
-        ).allow(
-            "file_read", reason="Reading files is safe"
-        ).allow(
-            "api_call", reason="API calls allowed by default"
-        ).deny(
-            "shell_exec", reason="Shell execution requires explicit approval"
-        ).deny(
-            "file_write", reason="File writes require explicit approval"
-        ).deny(
-            "code_exec", reason="Code execution requires explicit approval"
-        ).audit(
-            "database", reason="Database operations are audited"
+        return (
+            cls(
+                name="standard",
+                description="Balanced governance: common tools allowed, dangerous actions denied",
+                default_effect=Effect.DENY,
+            )
+            .allow("web_search", reason="Search is safe")
+            .allow("file_read", reason="Reading files is safe")
+            .allow("api_call", reason="API calls allowed by default")
+            .deny("shell_exec", reason="Shell execution requires explicit approval")
+            .deny("file_write", reason="File writes require explicit approval")
+            .deny("code_exec", reason="Code execution requires explicit approval")
+            .audit("database", reason="Database operations are audited")
         )

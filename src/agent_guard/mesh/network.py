@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import time
 import threading
+import time
 from collections import defaultdict
 from typing import Any
 
@@ -194,9 +194,7 @@ class AgentMesh:
         if not ch:
             raise ValueError(f"Channel '{channel}' does not exist")
         if ch.allowed_agents and agent_id not in ch.allowed_agents:
-            raise PermissionError(
-                f"Agent '{agent_id}' is not allowed on channel '{channel}'"
-            )
+            raise PermissionError(f"Agent '{agent_id}' is not allowed on channel '{channel}'")
         if ch.min_trust_score > 0:
             score = self._trust.get_score(agent_id)
             if score.score < ch.min_trust_score:

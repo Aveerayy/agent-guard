@@ -18,8 +18,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from agent_guard.core.engine import Guard
 from agent_guard.audit.logger import AuditLog
+from agent_guard.core.engine import Guard
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +60,7 @@ class GovernedCallbackHandler:
         if not decision.allowed:
             logger.warning(f"Blocked tool '{tool_name}': {decision.reason}")
             if self.raise_on_deny:
-                raise PermissionError(
-                    f"Agent Guard blocked '{tool_name}': {decision.reason}"
-                )
+                raise PermissionError(f"Agent Guard blocked '{tool_name}': {decision.reason}")
 
     def on_tool_end(self, output: str, **kwargs: Any) -> None:
         pass

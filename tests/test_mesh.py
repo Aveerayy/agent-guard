@@ -1,6 +1,7 @@
 """Tests for agent mesh communication."""
 
 import pytest
+
 from agent_guard import AgentIdentity, AgentMesh, TrustEngine
 
 

@@ -4,7 +4,6 @@ import json
 import time
 import urllib.request
 
-import pytest
 from agent_guard import Guard, Policy
 from agent_guard.audit.logger import AuditLog
 from agent_guard.dashboard.server import DashboardState, run_dashboard
@@ -53,8 +52,11 @@ class TestDashboardServer:
         audit.log("test_event", agent_id="test", action="web_search", allowed=True)
 
         server = run_dashboard(
-            guard, audit_log=audit,
-            port=17701, open_browser=False, blocking=False,
+            guard,
+            audit_log=audit,
+            port=17701,
+            open_browser=False,
+            blocking=False,
         )
 
         try:

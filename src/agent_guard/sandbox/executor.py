@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import resource as sys_resource
 import subprocess
 import tempfile
-import time
 import threading
+import time
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
@@ -17,11 +16,11 @@ from pydantic import BaseModel, Field
 class PermissionLevel(IntEnum):
     """Privilege rings, from most restricted to least."""
 
-    MINIMAL = 0      # No filesystem, no network, no subprocess
-    RESTRICTED = 1   # Read-only filesystem, no network
-    STANDARD = 2     # Read/write to sandbox dir, limited network
-    ELEVATED = 3     # Full filesystem, full network, no subprocess
-    ADMIN = 4        # Unrestricted
+    MINIMAL = 0  # No filesystem, no network, no subprocess
+    RESTRICTED = 1  # Read-only filesystem, no network
+    STANDARD = 2  # Read/write to sandbox dir, limited network
+    ELEVATED = 3  # Full filesystem, full network, no subprocess
+    ADMIN = 4  # Unrestricted
 
 
 class SandboxResult(BaseModel):
@@ -138,9 +137,7 @@ class Sandbox:
         finally:
             Path(script_path).unlink(missing_ok=True)
 
-    def exec_command(
-        self, command: list[str], *, timeout: float | None = None
-    ) -> SandboxResult:
+    def exec_command(self, command: list[str], *, timeout: float | None = None) -> SandboxResult:
         """Execute a shell command in the sandbox."""
         if self.config.permission_level <= PermissionLevel.RESTRICTED:
             return SandboxResult(

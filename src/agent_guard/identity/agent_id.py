@@ -111,6 +111,7 @@ class AgentIdentity(BaseModel):
         if self._private_key:
             return self._private_key.public_key()
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
         return Ed25519PublicKey.from_public_bytes(bytes.fromhex(self.public_key_hex))
 
     def sign_json(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -121,9 +122,7 @@ class AgentIdentity(BaseModel):
 
     def verify_json(self, signed: dict[str, Any]) -> bool:
         """Verify a signed JSON payload."""
-        canonical = json.dumps(
-            signed["payload"], sort_keys=True, separators=(",", ":")
-        ).encode()
+        canonical = json.dumps(signed["payload"], sort_keys=True, separators=(",", ":")).encode()
         return self.verify(canonical, bytes.fromhex(signed["signature"]))
 
     def __repr__(self) -> str:

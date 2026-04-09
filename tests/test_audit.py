@@ -1,6 +1,6 @@
 """Tests for audit logging."""
 
-from agent_guard import AuditLog, AuditEvent
+from agent_guard import AuditLog
 
 
 class TestAuditLog:

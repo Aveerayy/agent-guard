@@ -5,18 +5,18 @@ Sits between agents and MCP servers, enforcing policy on every tool call.
 
 from __future__ import annotations
 
-import time
 import threading
+import time
 from typing import Any
 
 from pydantic import BaseModel, Field
 
-from agent_guard.core.engine import Guard
-from agent_guard.core.actions import ActionType
 from agent_guard.audit.logger import AuditLog
-from agent_guard.mcp.scanner import MCPScanner, ScanResult
+from agent_guard.core.actions import ActionType
+from agent_guard.core.engine import Guard
+from agent_guard.filters.output_filter import FilterAction, FilterResult, OutputFilter
 from agent_guard.mcp.injection_detector import InjectionDetector, InjectionResult
-from agent_guard.filters.output_filter import OutputFilter, FilterResult, FilterAction
+from agent_guard.mcp.scanner import MCPScanner, ScanResult
 
 
 class GatewayConfig(BaseModel):
@@ -78,7 +78,9 @@ class MCPGateway:
         self._audit = audit_log or AuditLog()
         self._scanner = scanner or MCPScanner()
         self._injection_detector = injection_detector or InjectionDetector()
-        self._output_filter = output_filter or OutputFilter(action=self._config.output_filter_action)
+        self._output_filter = output_filter or OutputFilter(
+            action=self._config.output_filter_action
+        )
         self._registered_tools: dict[str, dict[str, Any]] = {}
         self._scan_results: dict[str, ScanResult] = {}
         self._call_log: list[ToolCallRecord] = []
@@ -119,21 +121,30 @@ class MCPGateway:
 
         if self._config.require_approval_for and tool_name in self._config.require_approval_for:
             return self._record(
-                tool_name, agent_id, False, params,
-                "Tool requires human approval (not yet approved)"
+                tool_name,
+                agent_id,
+                False,
+                params,
+                "Tool requires human approval (not yet approved)",
             )
 
         if not self._check_rate_limit(agent_id):
             return self._record(
-                tool_name, agent_id, False, params,
-                f"Rate limit exceeded ({self._config.max_calls_per_minute}/min)"
+                tool_name,
+                agent_id,
+                False,
+                params,
+                f"Rate limit exceeded ({self._config.max_calls_per_minute}/min)",
             )
 
         if self._config.detect_injection and params:
             injection = self._injection_detector.scan(tool_name, params, agent_id=agent_id)
             if injection.blocked:
                 record = self._record(
-                    tool_name, agent_id, False, params,
+                    tool_name,
+                    agent_id,
+                    False,
+                    params,
                     f"Injection detected (score={injection.risk_score:.0f}): "
                     + "; ".join(f.description for f in injection.findings[:3]),
                 )
@@ -168,12 +179,19 @@ class MCPGateway:
             return True
 
     def _record(
-        self, tool_name: str, agent_id: str, allowed: bool,
-        params: dict[str, Any], reason: str,
+        self,
+        tool_name: str,
+        agent_id: str,
+        allowed: bool,
+        params: dict[str, Any],
+        reason: str,
     ) -> ToolCallRecord:
         record = ToolCallRecord(
-            tool_name=tool_name, agent_id=agent_id, allowed=allowed,
-            parameters=params, reason=reason,
+            tool_name=tool_name,
+            agent_id=agent_id,
+            allowed=allowed,
+            parameters=params,
+            reason=reason,
         )
         with self._lock:
             self._call_log.append(record)
@@ -191,8 +209,7 @@ class MCPGateway:
         total = len(self._call_log)
         allowed = sum(1 for r in self._call_log if r.allowed)
         injections_blocked = sum(
-            1 for r in self._call_log
-            if r.injection_result and r.injection_result.blocked
+            1 for r in self._call_log if r.injection_result and r.injection_result.blocked
         )
         return {
             "registered_tools": len(self._registered_tools),
@@ -200,5 +217,7 @@ class MCPGateway:
             "allowed": allowed,
             "denied": total - allowed,
             "injections_blocked": injections_blocked,
-            "scan_findings": sum(r.critical_count + r.high_count for r in self._scan_results.values()),
+            "scan_findings": sum(
+                r.critical_count + r.high_count for r in self._scan_results.values()
+            ),
         }

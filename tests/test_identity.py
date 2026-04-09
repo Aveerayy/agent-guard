@@ -1,6 +1,6 @@
 """Tests for identity and trust systems."""
 
-from agent_guard import AgentIdentity, TrustEngine, TrustScore
+from agent_guard import AgentIdentity, TrustEngine
 
 
 class TestAgentIdentity:

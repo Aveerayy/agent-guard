@@ -19,11 +19,11 @@ Usage:
 from __future__ import annotations
 
 import logging
-from typing import Any
 from collections.abc import Callable
+from typing import Any
 
-from agent_guard.core.engine import Guard
 from agent_guard.audit.logger import AuditLog
+from agent_guard.core.engine import Guard
 
 logger = logging.getLogger(__name__)
 
@@ -57,16 +57,14 @@ class GovernedCrew:
 
         def governed_run(*args: Any, **kwargs: Any) -> Any:
             decision = governed_self.guard.evaluate(
-                name, agent_id=agent_id, parameters=kwargs
+                str(name or "unknown"), agent_id=agent_id, parameters=kwargs
             )
             governed_self.audit.log_decision(decision)
 
             if not decision.allowed:
                 logger.warning(f"Blocked '{name}' for {agent_id}: {decision.reason}")
                 if governed_self.raise_on_deny:
-                    raise PermissionError(
-                        f"Agent Guard blocked '{name}': {decision.reason}"
-                    )
+                    raise PermissionError(f"Agent Guard blocked '{name}': {decision.reason}")
                 return None
 
             return original_run(*args, **kwargs)
@@ -84,9 +82,7 @@ class GovernedCrew:
         parameters: dict[str, Any] | None = None,
     ) -> bool:
         """Check governance before a task executes. Returns True if allowed."""
-        decision = self.guard.evaluate(
-            action, agent_id=agent_id, parameters=parameters or {}
-        )
+        decision = self.guard.evaluate(action, agent_id=agent_id, parameters=parameters or {})
         self.audit.log_decision(decision)
 
         if not decision.allowed and self.raise_on_deny:
@@ -94,9 +90,7 @@ class GovernedCrew:
 
         return decision.allowed
 
-    def after_task(
-        self, agent_id: str, action: str, *, success: bool = True
-    ) -> None:
+    def after_task(self, agent_id: str, action: str, *, success: bool = True) -> None:
         self.audit.log(
             "task_complete" if success else "task_failed",
             agent_id=agent_id,
@@ -118,15 +112,16 @@ def govern_crewai_tool(
         def search(query: str) -> str:
             ...
     """
+
     def decorator(fn: Callable) -> Callable:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             decision = guard.evaluate(action_name, agent_id=agent_id, parameters=kwargs)
             if not decision.allowed:
-                raise PermissionError(
-                    f"Agent Guard blocked '{action_name}': {decision.reason}"
-                )
+                raise PermissionError(f"Agent Guard blocked '{action_name}': {decision.reason}")
             return fn(*args, **kwargs)
+
         wrapper.__name__ = fn.__name__
         wrapper.__doc__ = fn.__doc__
         return wrapper
+
     return decorator

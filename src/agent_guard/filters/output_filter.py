@@ -96,50 +96,48 @@ class FilterResult(BaseModel):
 _REDACT_PLACEHOLDER = "***REDACTED***"
 
 _PII_PATTERNS: list[tuple[str, SensitiveDataType, float]] = [
-    (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
-     SensitiveDataType.EMAIL, 0.95),
-
-    (r"(?<!\d)(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}(?!\d)",
-     SensitiveDataType.PHONE, 0.75),
-
-    (r"\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b",
-     SensitiveDataType.SSN, 0.85),
-
-    (r"\b(?:\d[ -]*?){13,19}\b",
-     SensitiveDataType.CREDIT_CARD, 0.7),
-
-    (r"\b(?:10\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])|192\.168)\.\d{1,3}\.\d{1,3}\b",
-     SensitiveDataType.IP_ADDRESS, 0.9),
+    (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", SensitiveDataType.EMAIL, 0.95),
+    (
+        r"(?<!\d)(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}(?!\d)",
+        SensitiveDataType.PHONE,
+        0.75,
+    ),
+    (r"\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b", SensitiveDataType.SSN, 0.85),
+    (r"\b(?:\d[ -]*?){13,19}\b", SensitiveDataType.CREDIT_CARD, 0.7),
+    (
+        r"\b(?:10\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])|192\.168)\.\d{1,3}\.\d{1,3}\b",
+        SensitiveDataType.IP_ADDRESS,
+        0.9,
+    ),
 ]
 
 _SECRET_PATTERNS: list[tuple[str, SensitiveDataType, float]] = [
-    (r"(?:AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}",
-     SensitiveDataType.AWS_KEY, 1.0),
-
-    (r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,255}",
-     SensitiveDataType.GITHUB_TOKEN, 1.0),
-
-    (r"AIza[0-9A-Za-z_-]{35}",
-     SensitiveDataType.GOOGLE_API_KEY, 1.0),
-
-    (r"xox[boaprs]-[0-9a-zA-Z-]{10,250}",
-     SensitiveDataType.SLACK_TOKEN, 1.0),
-
-    (r"(?:sk|pk|rk)_(?:live|test)_[0-9a-zA-Z]{20,250}",
-     SensitiveDataType.STRIPE_KEY, 1.0),
-
-    (r"eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.+/=-]{10,}",
-     SensitiveDataType.JWT, 0.95),
-
-    (r"-----BEGIN\s+(?:RSA|EC|DSA|OPENSSH|PGP)?\s*PRIVATE\s+KEY-----",
-     SensitiveDataType.PRIVATE_KEY, 1.0),
-
-    (r"(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|redis|amqp)://[^\s\"'`<>]{10,}",
-     SensitiveDataType.DB_CONNECTION_STRING, 0.95),
-
-    (r"(?i)(?:api[_-]?key|api[_-]?secret|secret[_-]?key|access[_-]?token|auth[_-]?token)"
-     r"\s*[:=]\s*['\"]?[A-Za-z0-9_/+=.-]{16,}['\"]?",
-     SensitiveDataType.GENERIC_SECRET, 0.8),
+    (r"(?:AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}", SensitiveDataType.AWS_KEY, 1.0),
+    (r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,255}", SensitiveDataType.GITHUB_TOKEN, 1.0),
+    (r"AIza[0-9A-Za-z_-]{35}", SensitiveDataType.GOOGLE_API_KEY, 1.0),
+    (r"xox[boaprs]-[0-9a-zA-Z-]{10,250}", SensitiveDataType.SLACK_TOKEN, 1.0),
+    (r"(?:sk|pk|rk)_(?:live|test)_[0-9a-zA-Z]{20,250}", SensitiveDataType.STRIPE_KEY, 1.0),
+    (
+        r"eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_.+/=-]{10,}",
+        SensitiveDataType.JWT,
+        0.95,
+    ),
+    (
+        r"-----BEGIN\s+(?:RSA|EC|DSA|OPENSSH|PGP)?\s*PRIVATE\s+KEY-----",
+        SensitiveDataType.PRIVATE_KEY,
+        1.0,
+    ),
+    (
+        r"(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|redis|amqp)://[^\s\"'`<>]{10,}",
+        SensitiveDataType.DB_CONNECTION_STRING,
+        0.95,
+    ),
+    (
+        r"(?i)(?:api[_-]?key|api[_-]?secret|secret[_-]?key|access[_-]?token|auth[_-]?token)"
+        r"\s*[:=]\s*['\"]?[A-Za-z0-9_/+=.-]{16,}['\"]?",
+        SensitiveDataType.GENERIC_SECRET,
+        0.8,
+    ),
 ]
 
 
@@ -202,17 +200,12 @@ class OutputFilter:
         if custom_patterns:
             patterns.extend(custom_patterns)
 
-        self._compiled = [
-            (re.compile(p), dtype, conf)
-            for p, dtype, conf in patterns
-        ]
+        self._compiled = [(re.compile(p), dtype, conf) for p, dtype, conf in patterns]
 
     def scan(self, text: str) -> FilterResult:
         """Scan text for PII and secrets, returning findings and optionally redacted text."""
         if not text:
-            return FilterResult(
-                original_length=0, filtered_text="", action_taken=self._action
-            )
+            return FilterResult(original_length=0, filtered_text="", action_taken=self._action)
 
         findings: list[FilterFinding] = []
         for regex, data_type, confidence in self._compiled:
@@ -221,18 +214,19 @@ class OutputFilter:
             for match in regex.finditer(text):
                 matched = match.group(0)
 
-                if data_type == SensitiveDataType.CREDIT_CARD:
-                    if not _luhn_check(matched):
-                        continue
+                if data_type == SensitiveDataType.CREDIT_CARD and not _luhn_check(matched):
+                    continue
 
-                findings.append(FilterFinding(
-                    data_type=data_type,
-                    matched_text=matched[:8] + "..." if len(matched) > 8 else matched,
-                    redacted_text=self._placeholder,
-                    start=match.start(),
-                    end=match.end(),
-                    confidence=confidence,
-                ))
+                findings.append(
+                    FilterFinding(
+                        data_type=data_type,
+                        matched_text=matched[:8] + "..." if len(matched) > 8 else matched,
+                        redacted_text=self._placeholder,
+                        start=match.start(),
+                        end=match.end(),
+                        confidence=confidence,
+                    )
+                )
 
         findings.sort(key=lambda f: f.start, reverse=True)
         _deduplicate(findings)
@@ -242,7 +236,9 @@ class OutputFilter:
         filtered_text = text
         if self._action == FilterAction.REDACT and findings:
             for f in findings:
-                filtered_text = filtered_text[:f.start] + self._placeholder + filtered_text[f.end:]
+                filtered_text = (
+                    filtered_text[: f.start] + self._placeholder + filtered_text[f.end :]
+                )
         elif blocked:
             filtered_text = "[BLOCKED — output contained sensitive data]"
 

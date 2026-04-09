@@ -14,11 +14,11 @@ Usage:
 from __future__ import annotations
 
 import logging
-from typing import Any
 from collections.abc import Callable
+from typing import Any
 
-from agent_guard.core.engine import Guard
 from agent_guard.audit.logger import AuditLog
+from agent_guard.core.engine import Guard
 
 logger = logging.getLogger(__name__)
 
@@ -44,17 +44,13 @@ class GovernedAutoGen:
         parameters: dict[str, Any] | None = None,
     ) -> bool:
         """Check governance before an AutoGen agent executes an action."""
-        decision = self.guard.evaluate(
-            action, agent_id=agent_name, parameters=parameters or {}
-        )
+        decision = self.guard.evaluate(action, agent_id=agent_name, parameters=parameters or {})
         self.audit.log_decision(decision)
 
         if not decision.allowed:
             logger.warning(f"Blocked '{action}' for {agent_name}: {decision.reason}")
             if self.raise_on_deny:
-                raise PermissionError(
-                    f"Agent Guard blocked '{action}': {decision.reason}"
-                )
+                raise PermissionError(f"Agent Guard blocked '{action}': {decision.reason}")
         return decision.allowed
 
     def wrap_function(
@@ -73,19 +69,13 @@ class GovernedAutoGen:
             )
             governed_self.audit.log_decision(decision)
             if not decision.allowed:
-                raise PermissionError(
-                    f"Agent Guard blocked '{action_name}': {decision.reason}"
-                )
+                raise PermissionError(f"Agent Guard blocked '{action_name}': {decision.reason}")
             return fn(*args, **kwargs)
 
         wrapper.__name__ = fn.__name__
         wrapper.__doc__ = fn.__doc__
         return wrapper
 
-    def govern_code_execution(
-        self, agent_name: str, code: str
-    ) -> bool:
+    def govern_code_execution(self, agent_name: str, code: str) -> bool:
         """Specifically govern code execution — common in AutoGen workflows."""
-        return self.before_execute(
-            agent_name, "code_exec", parameters={"code": code[:500]}
-        )
+        return self.before_execute(agent_name, "code_exec", parameters={"code": code[:500]})

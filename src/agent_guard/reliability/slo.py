@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import time
 import threading
+import time
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -99,7 +99,9 @@ class SLO:
             budget_remaining = (
                 (allowed_failures - actual_failures) / allowed_failures
                 if allowed_failures > 0
-                else 1.0 if actual_failures == 0 else 0.0
+                else 1.0
+                if actual_failures == 0
+                else 0.0
             )
 
             now = time.time()
