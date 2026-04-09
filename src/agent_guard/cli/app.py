@@ -20,7 +20,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="agent-guard")
+@click.version_option(version="0.2.0", prog_name="agent-guard")
 def main() -> None:
     """Agent Guard — Simple, powerful governance for AI agents."""
     pass
@@ -30,7 +30,7 @@ def main() -> None:
 def info() -> None:
     """Show Agent Guard info and capabilities."""
     console.print(Panel.fit(
-        "[bold cyan]Agent Guard[/bold cyan] v0.1.0\n\n"
+        "[bold cyan]Agent Guard[/bold cyan] v0.2.0\n\n"
         "Simple, powerful governance for AI agents.\n\n"
         "[bold]Capabilities:[/bold]\n"
         "  • Policy engine with YAML rules & fluent Python API\n"

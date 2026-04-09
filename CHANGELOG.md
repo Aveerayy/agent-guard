@@ -5,6 +5,38 @@ All notable changes to Agent Guard will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-04-09
+
+### Added
+
+- **Output PII/Secrets Filter** (`agent_guard.filters.output_filter`) — Detects and redacts emails, phone numbers, SSNs, credit cards (Luhn-validated), internal IPs, AWS keys, GitHub tokens, Google API keys, Slack tokens, Stripe keys, JWTs, private keys, DB connection strings, and generic API key patterns. Configurable actions: redact, block, warn, log. Recursive dict scanning. Custom pattern support.
+- **Runtime Injection Detector** (`agent_guard.mcp.injection_detector`) — Scans tool call arguments at runtime for prompt injection attacks: instruction overrides, delimiter injection (OpenAI/Llama/Gemma chat template tokens), role hijacking, data exfiltration, encoded payloads (base64, unicode tag smuggling), jailbreak attempts (DAN, filter bypass), urgency manipulation, and destructive commands. Compound scoring escalates risk when multiple attack types appear in one call.
+- **Web Dashboard** (`agent_guard.dashboard`) — Real-time dark-mode monitoring UI served from a zero-dependency embedded HTTP server. Live stats, event stream, violation tracker, policy viewer, and kill switch toggle. Auto-refreshes every 2 seconds. Bearer token auth on write operations.
+- **`agent-guard dashboard` CLI command** — Launch the dashboard from the command line.
+- **`python -m agent_guard`** — Root `__main__.py` for direct module invocation.
+- **Gateway output filtering** — `MCPGateway.filter_output()` and `filter_output_dict()` for scanning tool responses through the output filter.
+- **Gateway injection detection** — Automatic injection scanning on every `MCPGateway.authorize()` call when `detect_injection=True`.
+
+### Changed
+
+- **ASI-05 control** now references `OutputFilter` instead of audit logging for Insecure Output Handling coverage.
+- **Integrity verifier** expanded from 10 to 16 governance modules.
+- **CI matrix** now tests Python 3.9 through 3.13 (previously 3.10+).
+- **CI pipeline** adds `pip-audit` dependency vulnerability scanning.
+
+### Fixed
+
+- **CLI entry point** — `pyproject.toml` script pointed to `agent_guard.cli:main` (missing); corrected to `agent_guard.cli.app:main`.
+- **Dashboard security** — Kill switch POST endpoints now require Bearer token authentication. Removed wildcard CORS header.
+- **Dead imports** — Removed unused `hashlib` and `TrustScore` imports from `mesh/network.py`.
+
+### Security
+
+- Dashboard binds to `127.0.0.1` only by default, with Bearer token auth required for write operations.
+- Output filter detects 14 categories of sensitive data with Luhn validation for credit cards.
+- Injection detector catches 9 categories of prompt injection with base64 and unicode tag smuggling decoding.
+- Added `pip-audit --strict` to CI for automated dependency vulnerability scanning.
+
 ## [0.1.0] - 2026-04-04
 
 ### Added
@@ -37,4 +69,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pre-commit hook** — Policy YAML validation.
 - **Full OWASP Agentic Top 10 coverage** (ASI-01 through ASI-10).
 
+[0.2.0]: https://github.com/Aveerayy/agent-guard/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Aveerayy/agent-guard/releases/tag/v0.1.0

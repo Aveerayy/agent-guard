@@ -80,7 +80,7 @@ class GovernanceAttestation(BaseModel):
 
     version: str = "1.0"
     framework: str = "agent-guard"
-    framework_version: str = "0.1.0"
+    framework_version: str = "0.2.0"
     timestamp: float = Field(default_factory=time.time)
     controls: list[ControlStatus] = Field(default_factory=list)
     coverage_score: float = 0.0

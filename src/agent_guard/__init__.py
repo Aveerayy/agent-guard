@@ -31,7 +31,7 @@ from agent_guard.compliance.integrity import IntegrityVerifier
 from agent_guard.observability.hooks import ObservabilityBus, GuardEvent
 from agent_guard.policies.rate_limit import RateLimiter
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "Guard",
