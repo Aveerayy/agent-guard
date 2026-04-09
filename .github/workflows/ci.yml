@@ -34,7 +34,14 @@ jobs:
         run: pytest tests/ -v --tb=short --cov=agent_guard --cov-report=term-missing
 
       - name: Run governance attestation
-        run: python -c "from agent_guard import GovernanceVerifier; v = GovernanceVerifier(); a = v.verify(); print(f'OWASP Coverage: {a.coverage_score:.0%}'); assert a.fully_compliant"
+        run: |
+          python -c "
+          from agent_guard import GovernanceVerifier
+          v = GovernanceVerifier()
+          a = v.verify()
+          print(f'OWASP Coverage: {a.coverage_score:.0%}')
+          assert a.fully_compliant
+          "
 
   lint:
     name: Lint
