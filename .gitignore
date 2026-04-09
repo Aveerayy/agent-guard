@@ -17,5 +17,4 @@ ENV/
 *.log
 .coverage
 htmlcov/
-policies/
-marketing/
+/marketing/

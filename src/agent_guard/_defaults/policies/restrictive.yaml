@@ -1,0 +1,6 @@
+name: restrictive
+description: "Deny everything by default — only explicitly allowed actions proceed"
+version: "1.0"
+default_effect: deny
+
+rules: []

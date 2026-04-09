@@ -1,0 +1,20 @@
+name: permissive
+description: "Allow everything, audit dangerous actions"
+version: "1.0"
+default_effect: allow
+
+rules:
+  - name: audit_shell
+    action: shell_exec
+    effect: audit
+    reason: "Shell execution audited"
+
+  - name: audit_write
+    action: file_write
+    effect: audit
+    reason: "File writes audited"
+
+  - name: audit_code
+    action: code_exec
+    effect: audit
+    reason: "Code execution audited"

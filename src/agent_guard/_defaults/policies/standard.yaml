@@ -1,0 +1,40 @@
+name: standard
+description: "Balanced governance: common tools allowed, dangerous actions denied"
+version: "1.0"
+default_effect: deny
+
+rules:
+  - name: allow_search
+    action: web_search
+    effect: allow
+    reason: "Search is safe"
+
+  - name: allow_read
+    action: file_read
+    effect: allow
+    reason: "Reading files is safe"
+
+  - name: allow_api
+    action: api_call
+    effect: allow
+    reason: "API calls allowed by default"
+
+  - name: block_shell
+    action: shell_exec
+    effect: deny
+    reason: "Shell execution requires explicit approval"
+
+  - name: block_write
+    action: file_write
+    effect: deny
+    reason: "File writes require explicit approval"
+
+  - name: block_code
+    action: code_exec
+    effect: deny
+    reason: "Code execution requires explicit approval"
+
+  - name: audit_database
+    action: database
+    effect: audit
+    reason: "Database operations are audited"
