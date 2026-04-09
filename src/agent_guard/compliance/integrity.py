@@ -38,6 +38,12 @@ GOVERNANCE_MODULES = [
     "agent_guard.mesh.network",
     "agent_guard.mcp.scanner",
     "agent_guard.mcp.gateway",
+    "agent_guard.mcp.injection_detector",
+    "agent_guard.filters.output_filter",
+    "agent_guard.reliability.circuit_breaker",
+    "agent_guard.reliability.slo",
+    "agent_guard.compliance.attestation",
+    "agent_guard.observability.hooks",
 ]
 
 

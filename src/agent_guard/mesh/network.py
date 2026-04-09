@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import time
 import threading
-import hashlib
 from collections import defaultdict
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 from agent_guard.identity.agent_id import AgentIdentity
-from agent_guard.identity.trust import TrustEngine, TrustScore
+from agent_guard.identity.trust import TrustEngine
 
 
 class Message(BaseModel):

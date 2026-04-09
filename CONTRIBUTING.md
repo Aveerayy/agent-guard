@@ -56,18 +56,20 @@ python -c "from agent_guard import GovernanceVerifier; print(GovernanceVerifier(
 
 ```
 src/agent_guard/
-├── core/         # Policy engine, actions, Guard
-├── identity/     # Agent ID, trust scoring
-├── policies/     # Loaders, builtins, rate limiting
-├── sandbox/      # Execution sandboxing
-├── audit/        # Hash-chained audit logging
-├── mesh/         # Agent-to-agent communication
-├── mcp/          # MCP security scanner & gateway
-├── reliability/  # Circuit breakers, SLOs
-├── compliance/   # OWASP attestation, integrity
-├── observability/ # Telemetry hooks
-├── integrations/ # LangChain, OpenAI, CrewAI, AutoGen
-└── cli/          # Command-line interface
+├── core/           # Policy engine, actions, Guard
+├── identity/       # Agent ID, trust scoring
+├── policies/       # Loaders, builtins, rate limiting
+├── sandbox/        # Execution sandboxing
+├── audit/          # Hash-chained audit logging
+├── mesh/           # Agent-to-agent communication
+├── mcp/            # MCP scanner, runtime gateway, injection detector
+├── filters/        # Output PII/secrets filter & redaction
+├── reliability/    # Circuit breakers, SLOs
+├── compliance/     # OWASP attestation, integrity verification
+├── observability/  # Telemetry hooks & metrics
+├── dashboard/      # Real-time web monitoring UI
+├── integrations/   # LangChain, OpenAI, CrewAI, AutoGen
+└── cli/            # Command-line interface
 ```
 
 ## License

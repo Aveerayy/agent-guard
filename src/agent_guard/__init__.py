@@ -24,6 +24,8 @@ from agent_guard.reliability.circuit_breaker import CircuitBreaker
 from agent_guard.reliability.slo import SLO
 from agent_guard.mcp.scanner import MCPScanner, ScanResult, ThreatFinding
 from agent_guard.mcp.gateway import MCPGateway
+from agent_guard.mcp.injection_detector import InjectionDetector, InjectionResult
+from agent_guard.filters.output_filter import OutputFilter, FilterResult, FilterAction
 from agent_guard.compliance.attestation import GovernanceVerifier, GovernanceAttestation
 from agent_guard.compliance.integrity import IntegrityVerifier
 from agent_guard.observability.hooks import ObservabilityBus, GuardEvent
@@ -52,6 +54,11 @@ __all__ = [
     "MCPGateway",
     "ScanResult",
     "ThreatFinding",
+    "InjectionDetector",
+    "InjectionResult",
+    "OutputFilter",
+    "FilterResult",
+    "FilterAction",
     "GovernanceVerifier",
     "GovernanceAttestation",
     "IntegrityVerifier",

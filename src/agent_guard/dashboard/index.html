@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Guard Dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-2: #1c2333;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --orange: #d29922;
+    --purple: #bc8cff;
+    --cyan: #39d353;
+    --font: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  header h1 .shield { font-size: 22px; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-active { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+  .status-killed { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid rgba(248,81,73,.3); }
+
+  .kill-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid;
+    font-family: var(--font);
+    transition: all .15s;
+  }
+
+  .kill-btn.arm { background: rgba(248,81,73,.1); color: var(--red); border-color: rgba(248,81,73,.4); }
+  .kill-btn.arm:hover { background: var(--red); color: #fff; }
+  .kill-btn.disarm { background: rgba(63,185,80,.1); color: var(--green); border-color: rgba(63,185,80,.4); }
+  .kill-btn.disarm:hover { background: var(--green); color: #000; }
+
+  .uptime { font-family: var(--font); font-size: 12px; color: var(--text-dim); }
+
+  main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .stat-card .value {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: var(--font);
+    line-height: 1;
+  }
+
+  .stat-card .sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    font-family: var(--font);
+  }
+
+  .color-green { color: var(--green); }
+  .color-red { color: var(--red); }
+  .color-orange { color: var(--orange); }
+  .color-accent { color: var(--accent); }
+  .color-purple { color: var(--purple); }
+
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 900px) { .panels { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-body { max-height: 420px; overflow-y: auto; }
+
+  .event-row {
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    transition: background .1s;
+  }
+
+  .event-row:hover { background: var(--surface-2); }
+  .event-row:last-child { border-bottom: none; }
+
+  .event-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-allow { background: var(--green); }
+  .dot-deny { background: var(--red); }
+  .dot-audit { background: var(--orange); }
+
+  .event-action {
+    font-family: var(--font);
+    font-weight: 600;
+    min-width: 120px;
+  }
+
+  .event-agent {
+    font-family: var(--font);
+    color: var(--accent);
+    min-width: 100px;
+  }
+
+  .event-reason {
+    color: var(--text-dim);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .event-time {
+    font-family: var(--font);
+    color: var(--text-dim);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .policy-row {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .policy-row:last-child { border-bottom: none; }
+
+  .policy-name {
+    font-weight: 600;
+    font-family: var(--font);
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .policy-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .rule-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .rule-tag {
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+
+  .tag-allow { background: rgba(63,185,80,.1); color: var(--green); border-color: rgba(63,185,80,.3); }
+  .tag-deny { background: rgba(248,81,73,.1); color: var(--red); border-color: rgba(248,81,73,.3); }
+  .tag-audit { background: rgba(210,153,34,.1); color: var(--orange); border-color: rgba(210,153,34,.3); }
+
+  .full-width { grid-column: 1 / -1; }
+
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .refresh-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+  }
+
+  .panel-body::-webkit-scrollbar { width: 6px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <span class="shield">&#x1F6E1;</span>
+    Agent Guard
+  </h1>
+  <div class="header-right">
+    <span class="uptime" id="uptime">--</span>
+    <div class="refresh-indicator"></div>
+    <span class="status-badge status-active" id="status-badge">ACTIVE</span>
+    <button class="kill-btn arm" id="kill-btn" onclick="toggleKillSwitch()">KILL SWITCH</button>
+  </div>
+</header>
+
+<main>
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card">
+      <div class="label">Total Evaluations</div>
+      <div class="value color-accent" id="s-total">0</div>
+      <div class="sub" id="s-rate">0/s avg</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Allowed</div>
+      <div class="value color-green" id="s-allowed">0</div>
+      <div class="sub" id="s-allow-pct">0%</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Denied</div>
+      <div class="value color-red" id="s-denied">0</div>
+      <div class="sub" id="s-deny-pct">0%</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Injections Blocked</div>
+      <div class="value color-orange" id="s-injections">0</div>
+      <div class="sub">runtime detection</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Policies Loaded</div>
+      <div class="value color-purple" id="s-policies">0</div>
+      <div class="sub" id="s-rules">0 rules</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg Eval Time</div>
+      <div class="value color-accent" id="s-latency">0</div>
+      <div class="sub">ms / decision</div>
+    </div>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-header">
+        <span>Recent Events</span>
+        <span id="event-count" style="font-family: var(--font);">0</span>
+      </div>
+      <div class="panel-body" id="events-body">
+        <div class="empty-state">No events yet — evaluate an action to see activity here.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span>Violations</span>
+        <span id="violation-count" style="font-family: var(--font); color: var(--red);">0</span>
+      </div>
+      <div class="panel-body" id="violations-body">
+        <div class="empty-state">No violations — all clear.</div>
+      </div>
+    </div>
+
+    <div class="panel full-width">
+      <div class="panel-header">
+        <span>Active Policies</span>
+      </div>
+      <div class="panel-body" id="policies-body">
+        <div class="empty-state">No policies loaded.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let killActive = false;
+
+function formatUptime(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  if (h > 0) return h + 'h ' + m + 'm ' + sec + 's';
+  if (m > 0) return m + 'm ' + sec + 's';
+  return sec + 's';
+}
+
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts * 1000);
+  return d.toLocaleTimeString();
+}
+
+function renderEvents(events, containerId) {
+  const c = document.getElementById(containerId);
+  if (!events || events.length === 0) {
+    c.innerHTML = '<div class="empty-state">' +
+      (containerId === 'violations-body' ? 'No violations — all clear.' : 'No events yet.') +
+      '</div>';
+    return;
+  }
+  c.innerHTML = events.slice().reverse().map(function(e) {
+    const dotClass = e.allowed ? 'dot-allow' : 'dot-deny';
+    return '<div class="event-row">' +
+      '<span class="event-dot ' + dotClass + '"></span>' +
+      '<span class="event-action">' + (e.action || '—') + '</span>' +
+      '<span class="event-agent">' + (e.agent_id || '—') + '</span>' +
+      '<span class="event-reason">' + (e.reason || e.matched_rule || '') + '</span>' +
+      '<span class="event-time">' + formatTime(e.timestamp) + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+function renderPolicies(policies) {
+  const c = document.getElementById('policies-body');
+  if (!policies || policies.length === 0) {
+    c.innerHTML = '<div class="empty-state">No policies loaded.</div>';
+    return;
+  }
+  c.innerHTML = policies.map(function(p) {
+    const rules = (p.rules || []).map(function(r) {
+      const cls = r.effect === 'allow' ? 'tag-allow' : r.effect === 'audit' ? 'tag-audit' : 'tag-deny';
+      return '<span class="rule-tag ' + cls + '">' + r.effect + ' ' + r.action + '</span>';
+    }).join('');
+    return '<div class="policy-row">' +
+      '<div class="policy-name">' + p.name + ' <span style="color:var(--text-dim);font-weight:400;font-size:12px">(' + p.rules_count + ' rules, default: ' + p.default_effect + ')</span></div>' +
+      '<div class="policy-desc">' + (p.description || '') + '</div>' +
+      '<div class="rule-tags">' + rules + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+async function fetchJSON(url) {
+  try {
+    const r = await fetch(url);
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+async function refresh() {
+  const [overview, events, violations, policies] = await Promise.all([
+    fetchJSON('/api/overview'),
+    fetchJSON('/api/events'),
+    fetchJSON('/api/violations'),
+    fetchJSON('/api/policies'),
+  ]);
+
+  if (overview) {
+    const g = overview.guard || {};
+    const gw = overview.gateway || {};
+
+    document.getElementById('uptime').textContent = 'uptime ' + formatUptime(overview.uptime_seconds);
+    document.getElementById('s-total').textContent = g.total_evaluations || 0;
+    document.getElementById('s-allowed').textContent = g.allowed || 0;
+    document.getElementById('s-denied').textContent = g.denied || 0;
+    document.getElementById('s-policies').textContent = g.policies_loaded || 0;
+    document.getElementById('s-rules').textContent = (g.total_rules || 0) + ' rules';
+
+    const total = g.total_evaluations || 0;
+    const allowed = g.allowed || 0;
+    const denied = g.denied || 0;
+    document.getElementById('s-allow-pct').textContent = total ? Math.round(allowed/total*100) + '%' : '0%';
+    document.getElementById('s-deny-pct').textContent = total ? Math.round(denied/total*100) + '%' : '0%';
+    document.getElementById('s-latency').textContent = (g.avg_evaluation_ms || 0).toFixed(2);
+
+    const injBlocked = gw.injections_blocked || 0;
+    document.getElementById('s-injections').textContent = injBlocked;
+
+    if (overview.uptime_seconds > 0 && total > 0) {
+      document.getElementById('s-rate').textContent = (total / overview.uptime_seconds).toFixed(1) + '/s avg';
+    }
+
+    killActive = overview.kill_switch;
+    const badge = document.getElementById('status-badge');
+    const btn = document.getElementById('kill-btn');
+    if (killActive) {
+      badge.className = 'status-badge status-killed';
+      badge.textContent = 'KILLED';
+      btn.className = 'kill-btn disarm';
+      btn.textContent = 'RESTORE';
+    } else {
+      badge.className = 'status-badge status-active';
+      badge.textContent = 'ACTIVE';
+      btn.className = 'kill-btn arm';
+      btn.textContent = 'KILL SWITCH';
+    }
+  }
+
+  if (events) {
+    document.getElementById('event-count').textContent = events.length;
+    renderEvents(events, 'events-body');
+  }
+  if (violations) {
+    document.getElementById('violation-count').textContent = violations.length;
+    renderEvents(violations, 'violations-body');
+  }
+  if (policies) {
+    renderPolicies(policies);
+  }
+}
+
+async function toggleKillSwitch() {
+  const url = killActive ? '/api/kill-switch/deactivate' : '/api/kill-switch/activate';
+  if (!killActive && !confirm('Activate kill switch? ALL agent actions will be blocked.')) return;
+  await fetch(url, { method: 'POST' });
+  await refresh();
+}
+
+refresh();
+setInterval(refresh, 2000);
+</script>
+
+</body>
+</html>

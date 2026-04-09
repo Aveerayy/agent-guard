@@ -38,6 +38,9 @@ def info() -> None:
         "  • Execution sandboxing with permission levels\n"
         "  • Hash-chained audit logging\n"
         "  • Agent-to-agent secure mesh\n"
+        "  • Runtime injection detection on tool arguments\n"
+        "  • Output PII/secrets filtering & redaction\n"
+        "  • Real-time web dashboard\n"
         "  • Circuit breakers & SLO tracking\n"
         "  • LangChain, OpenAI, CrewAI, AutoGen integrations\n\n"
         "[bold]OWASP Agentic Top 10:[/bold] 10/10 risks covered",
@@ -189,7 +192,7 @@ def owasp() -> None:
         ("Excessive Capabilities", "ASI-02", "Policy rules enforce least-privilege"),
         ("Identity & Privilege Abuse", "ASI-03", "Ed25519 identity + trust scoring"),
         ("Uncontrolled Code Execution", "ASI-04", "Sandbox with permission levels"),
-        ("Insecure Output Handling", "ASI-05", "Audit logging validates outputs"),
+        ("Insecure Output Handling", "ASI-05", "Output PII/secrets filter + audit logging"),
         ("Memory Poisoning", "ASI-06", "Hash-chained audit detects tampering"),
         ("Unsafe Inter-Agent Comms", "ASI-07", "Mesh with trust-gated channels"),
         ("Cascading Failures", "ASI-08", "Circuit breakers + SLO enforcement"),
@@ -201,6 +204,24 @@ def owasp() -> None:
         table.add_row(risk, risk_id, f"✅ {control}")
 
     console.print(table)
+
+
+@main.command()
+@click.option("--host", "-h", default="127.0.0.1", help="Bind address")
+@click.option("--port", "-p", default=7700, type=int, help="Port number")
+@click.option("--no-browser", is_flag=True, help="Don't open browser automatically")
+def dashboard(host: str, port: int, no_browser: bool) -> None:
+    """Launch the real-time governance dashboard."""
+    from agent_guard.dashboard.server import run_dashboard
+
+    guard = Guard()
+    guard.add_policy(Policy.standard())
+
+    console.print(f"[cyan bold]Agent Guard Dashboard[/cyan bold] starting on "
+                  f"[underline]http://{host}:{port}[/underline]")
+    console.print("[dim]Press Ctrl+C to stop[/dim]\n")
+
+    run_dashboard(guard, host=host, port=port, open_browser=not no_browser)
 
 
 @main.command()

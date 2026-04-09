@@ -15,6 +15,8 @@ from agent_guard.core.engine import Guard
 from agent_guard.core.actions import ActionType
 from agent_guard.audit.logger import AuditLog
 from agent_guard.mcp.scanner import MCPScanner, ScanResult
+from agent_guard.mcp.injection_detector import InjectionDetector, InjectionResult
+from agent_guard.filters.output_filter import OutputFilter, FilterResult, FilterAction
 
 
 class GatewayConfig(BaseModel):
@@ -30,6 +32,9 @@ class GatewayConfig(BaseModel):
     )
     max_calls_per_minute: int = 60
     scan_on_register: bool = True
+    detect_injection: bool = True
+    filter_outputs: bool = True
+    output_filter_action: FilterAction = FilterAction.REDACT
 
 
 class ToolCallRecord(BaseModel):
@@ -39,6 +44,8 @@ class ToolCallRecord(BaseModel):
     timestamp: float = Field(default_factory=time.time)
     parameters: dict[str, Any] = Field(default_factory=dict)
     reason: str = ""
+    injection_result: InjectionResult | None = None
+    output_filter_result: FilterResult | None = None
 
 
 class MCPGateway:
@@ -63,11 +70,15 @@ class MCPGateway:
         config: GatewayConfig | None = None,
         audit_log: AuditLog | None = None,
         scanner: MCPScanner | None = None,
+        injection_detector: InjectionDetector | None = None,
+        output_filter: OutputFilter | None = None,
     ):
         self._guard = guard
         self._config = config or GatewayConfig()
         self._audit = audit_log or AuditLog()
         self._scanner = scanner or MCPScanner()
+        self._injection_detector = injection_detector or InjectionDetector()
+        self._output_filter = output_filter or OutputFilter(action=self._config.output_filter_action)
         self._registered_tools: dict[str, dict[str, Any]] = {}
         self._scan_results: dict[str, ScanResult] = {}
         self._call_log: list[ToolCallRecord] = []
@@ -118,12 +129,31 @@ class MCPGateway:
                 f"Rate limit exceeded ({self._config.max_calls_per_minute}/min)"
             )
 
+        if self._config.detect_injection and params:
+            injection = self._injection_detector.scan(tool_name, params, agent_id=agent_id)
+            if injection.blocked:
+                record = self._record(
+                    tool_name, agent_id, False, params,
+                    f"Injection detected (score={injection.risk_score:.0f}): "
+                    + "; ".join(f.description for f in injection.findings[:3]),
+                )
+                record.injection_result = injection
+                return record
+
         decision = self._guard.evaluate(
             tool_name, agent_id=agent_id, action_type=ActionType.TOOL_CALL, parameters=params
         )
         self._audit.log_decision(decision)
 
         return self._record(tool_name, agent_id, decision.allowed, params, decision.reason)
+
+    def filter_output(self, text: str) -> FilterResult:
+        """Filter tool output for PII and secrets. Call after tool execution."""
+        return self._output_filter.scan(text)
+
+    def filter_output_dict(self, data: dict[str, Any]) -> FilterResult:
+        """Filter structured tool output for PII and secrets."""
+        return self._output_filter.scan_dict(data)
 
     def _check_rate_limit(self, agent_id: str) -> bool:
         now = time.time()
@@ -160,10 +190,15 @@ class MCPGateway:
     def stats(self) -> dict[str, Any]:
         total = len(self._call_log)
         allowed = sum(1 for r in self._call_log if r.allowed)
+        injections_blocked = sum(
+            1 for r in self._call_log
+            if r.injection_result and r.injection_result.blocked
+        )
         return {
             "registered_tools": len(self._registered_tools),
             "total_calls": total,
             "allowed": allowed,
             "denied": total - allowed,
+            "injections_blocked": injections_blocked,
             "scan_findings": sum(r.critical_count + r.high_count for r in self._scan_results.values()),
         }

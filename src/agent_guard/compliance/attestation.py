@@ -34,8 +34,8 @@ OWASP_ASI_CONTROLS = {
     },
     "ASI-05": {
         "risk": "Insecure Output Handling",
-        "control": "Audit logging validates and records all outputs",
-        "module": "agent_guard.audit.logger",
+        "control": "Output PII/secrets filter with redaction + audit logging",
+        "module": "agent_guard.filters.output_filter",
     },
     "ASI-06": {
         "risk": "Memory Poisoning",

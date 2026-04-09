@@ -53,7 +53,7 @@ dev = [
 ]
 
 [project.scripts]
-agent-guard = "agent_guard.cli:main"
+agent-guard = "agent_guard.cli.app:main"
 
 [project.urls]
 Homepage = "https://github.com/Aveerayy/agent-guard"

@@ -29,7 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integrity Verification** — SHA-256 hash verification of governance module source files.
 - **Framework Integrations** — Drop-in adapters for LangChain (callback handler), OpenAI Agents SDK (decorator), CrewAI (wrapper), and AutoGen (middleware).
 - **CLI** — Command-line interface for policy management, testing, and MCP scanning.
-- **114 tests** covering all modules.
+- **Output PII/Secrets Filter** — Detects and redacts emails, phone numbers, SSNs, credit cards (Luhn-validated), AWS keys, GitHub tokens, JWTs, Stripe keys, private keys, DB connection strings, and generic API key patterns. Configurable actions: redact, block, warn, log. Recursive dict scanning. Custom pattern support.
+- **Runtime Injection Detector** — Scans tool call arguments at runtime for prompt injection attacks: instruction overrides, delimiter injection (OpenAI/Llama/Gemma formats), role hijacking, data exfiltration, encoded payloads (base64, unicode tag smuggling), jailbreak attempts, and destructive commands. Compound scoring escalates risk when multiple attack types appear.
+- **Web Dashboard** — Real-time dark-mode monitoring UI served from a zero-dependency embedded HTTP server. Shows live stats, event stream, violation tracker, policy viewer, and kill switch toggle. Bearer token auth on write operations.
+- **169 tests** covering all modules.
 - **CI/CD** — GitHub Actions workflows for testing, linting, type checking, and automated releases.
 - **Pre-commit hook** — Policy YAML validation.
 - **Full OWASP Agentic Top 10 coverage** (ASI-01 through ASI-10).
