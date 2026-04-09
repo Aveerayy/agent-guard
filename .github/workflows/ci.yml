@@ -95,4 +95,5 @@ jobs:
       - run: |
           pip install pip-audit
           pip install -e .
-          pip-audit --strict
+          pip freeze --exclude-editable > /tmp/deps.txt
+          pip-audit --strict -r /tmp/deps.txt
