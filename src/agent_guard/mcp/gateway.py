@@ -85,9 +85,7 @@ class MCPGateway:
             action=self._config.output_filter_action
         )
         self._token_inventory = token_inventory
-        self._token_scanner = (
-            TokenScanner(inventory=token_inventory) if token_inventory else None
-        )
+        self._token_scanner = TokenScanner(inventory=token_inventory) if token_inventory else None
         self._registered_tools: dict[str, dict[str, Any]] = {}
         self._scan_results: dict[str, ScanResult] = {}
         self._call_log: list[ToolCallRecord] = []

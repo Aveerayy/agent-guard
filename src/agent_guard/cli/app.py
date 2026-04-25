@@ -247,7 +247,10 @@ def tokens() -> None:
 @tokens.command(name="scan")
 @click.option("--dotenv", "-e", default=None, help="Path to .env file to include")
 @click.option(
-    "--config", "-c", "config_path", default=None,
+    "--config",
+    "-c",
+    "config_path",
+    default=None,
     help="MCP/agent config JSON to scan",
 )
 def tokens_scan(dotenv: str | None, config_path: str | None) -> None:

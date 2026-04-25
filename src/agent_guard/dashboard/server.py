@@ -99,10 +99,7 @@ class DashboardState:
     def tokens_stale(self, max_age_days: int = 90) -> list[dict[str, Any]]:
         if not self.token_inventory:
             return []
-        return [
-            t.to_summary()
-            for t in self.token_inventory.stale_tokens(max_age_days)
-        ]
+        return [t.to_summary() for t in self.token_inventory.stale_tokens(max_age_days)]
 
 
 class _Handler(BaseHTTPRequestHandler):
