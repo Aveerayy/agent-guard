@@ -17,6 +17,8 @@ from agent_guard.core.engine import Guard
 from agent_guard.filters.output_filter import FilterAction, FilterResult, OutputFilter
 from agent_guard.mcp.injection_detector import InjectionDetector, InjectionResult
 from agent_guard.mcp.scanner import MCPScanner, ScanResult
+from agent_guard.tokens.inventory import TokenInventory
+from agent_guard.tokens.scanner import TokenScanner
 
 
 class GatewayConfig(BaseModel):
@@ -72,6 +74,7 @@ class MCPGateway:
         scanner: MCPScanner | None = None,
         injection_detector: InjectionDetector | None = None,
         output_filter: OutputFilter | None = None,
+        token_inventory: TokenInventory | None = None,
     ):
         self._guard = guard
         self._config = config or GatewayConfig()
@@ -80,6 +83,10 @@ class MCPGateway:
         self._injection_detector = injection_detector or InjectionDetector()
         self._output_filter = output_filter or OutputFilter(
             action=self._config.output_filter_action
+        )
+        self._token_inventory = token_inventory
+        self._token_scanner = (
+            TokenScanner(inventory=token_inventory) if token_inventory else None
         )
         self._registered_tools: dict[str, dict[str, Any]] = {}
         self._scan_results: dict[str, ScanResult] = {}
@@ -151,6 +158,17 @@ class MCPGateway:
                 record.injection_result = injection
                 return record
 
+        if self._token_scanner and params:
+            from agent_guard.tokens.inventory import TokenSource
+
+            self._token_scanner.scan_dict(
+                params,
+                source=TokenSource.TOOL_ARGUMENT,
+                source_detail=tool_name,
+                agent_id=agent_id,
+                tool_name=tool_name,
+            )
+
         decision = self._guard.evaluate(
             tool_name, agent_id=agent_id, action_type=ActionType.TOOL_CALL, parameters=params
         )
@@ -205,13 +223,17 @@ class MCPGateway:
     def call_log(self) -> list[ToolCallRecord]:
         return list(self._call_log)
 
+    @property
+    def token_inventory(self) -> TokenInventory | None:
+        return self._token_inventory
+
     def stats(self) -> dict[str, Any]:
         total = len(self._call_log)
         allowed = sum(1 for r in self._call_log if r.allowed)
         injections_blocked = sum(
             1 for r in self._call_log if r.injection_result and r.injection_result.blocked
         )
-        return {
+        result: dict[str, Any] = {
             "registered_tools": len(self._registered_tools),
             "total_calls": total,
             "allowed": allowed,
@@ -221,3 +243,6 @@ class MCPGateway:
                 r.critical_count + r.high_count for r in self._scan_results.values()
             ),
         }
+        if self._token_inventory:
+            result["tokens"] = self._token_inventory.summary()
+        return result

@@ -5,6 +5,21 @@ All notable changes to Agent Guard will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Token Governance** (`agent_guard.tokens`) — Discover, inventory, risk-score, and enforce policy on every access token in your AI agent environment. Includes `TokenScanner` (env vars, `.env` files, MCP configs, runtime tool args/outputs), `TokenInventory` (dedup registry with usage tracking), `RiskScorer` (5-factor weighted scoring: provider criticality, privilege scope, age, exposure, breadth), and `TokenPolicy` (max age, rotation, sharing limits, provider deny-lists, inline credential alerts).
+- **MCPGateway token tracking** — `MCPGateway` accepts optional `token_inventory` parameter; `authorize()` now automatically scans tool arguments for credentials and tracks which agents/tools use which tokens at runtime.
+- **Dashboard token endpoints** — New `/api/tokens`, `/api/tokens/summary`, `/api/tokens/stale` API endpoints and `token_inventory` parameter for `run_dashboard()`.
+- **`agent-guard tokens` CLI** — New command group: `agent-guard tokens scan` (discover tokens), `agent-guard tokens list` (with `--risk`, `--provider`, `--stale` filters).
+- **72 new tests** for token scanner, inventory, risk scoring, policy engine, and dashboard integration (241 total).
+
+### Changed
+
+- **Integrity verifier** expanded from 16 to 20 governance modules (added token modules).
+- **`__init__.py`** now exports `TokenInventory`, `TokenRecord`, `TokenScanner`, `TokenPolicy`, `RiskScorer`, `RiskLevel`, `TokenStatus`.
+
 ## [0.2.0] - 2026-04-09
 
 ### Added

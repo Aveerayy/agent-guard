@@ -12,7 +12,7 @@
   <a href="https://github.com/Aveerayy/agent-guard/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.9%2B-blue?style=flat-square" alt="Python 3.9+"></a>
   <a href="#owasp-agentic-top-10"><img src="https://img.shields.io/badge/OWASP%20Agentic-10%2F10-brightgreen?style=flat-square" alt="OWASP 10/10"></a>
-  <a href="#"><img src="https://img.shields.io/badge/tests-169%20passed-brightgreen?style=flat-square" alt="Tests"></a>
+  <a href="#"><img src="https://img.shields.io/badge/tests-241%20passed-brightgreen?style=flat-square" alt="Tests"></a>
 </p>
 
 ---
@@ -145,6 +145,47 @@ if result.blocked:
 - **Destructive commands** — `rm -rf`, `eval()`, `exec()` in arguments
 
 Compound scoring escalates risk when multiple attack types appear in one call.
+
+### Token Governance — Know Every Credential in Your Environment
+
+Discover, inventory, risk-score, and enforce policy on every access token your agents use. No competing tool does this for AI agent workflows.
+
+```python
+from agent_guard import Guard, MCPGateway, TokenInventory
+from agent_guard.tokens import TokenScanner, TokenPolicy, RiskScorer
+
+# Discover tokens in your environment
+inventory = TokenInventory()
+scanner = TokenScanner(inventory=inventory)
+scanner.scan_environment()                        # OPENAI_API_KEY, AWS creds, etc.
+scanner.scan_config("~/.cursor/mcp.json")         # MCP server credentials
+
+# Risk-score every token
+RiskScorer().score_all(inventory.list_tokens())
+
+for token in inventory.list_tokens():
+    print(f"{token.provider.value}: {token.masked_value} "
+          f"[risk={token.risk_level.value}] age={token.age_days:.0f}d")
+
+# Wire into gateway for automatic runtime tracking
+gateway = MCPGateway(guard, token_inventory=inventory)
+
+# Enforce credential policies
+policy = TokenPolicy(max_age_days=90, max_agents_per_token=3)
+for result in policy.evaluate_all(inventory.list_tokens()):
+    if not result.compliant:
+        print(f"VIOLATION: {result.messages}")
+```
+
+```bash
+# CLI
+agent-guard tokens scan                  # Discover all tokens
+agent-guard tokens list --risk high      # Filter by risk level
+agent-guard tokens list --stale          # Tokens exceeding max age
+agent-guard tokens list --provider aws   # Filter by provider
+```
+
+**Tracks:** AWS, GitHub, Google, OpenAI, Anthropic, Slack, Stripe, Azure, database connection strings, JWTs, SSH keys, and generic secrets. Risk scoring across 5 weighted factors (provider criticality, privilege scope, age, exposure surface, usage breadth). Policy enforcement for rotation, sharing limits, provider deny-lists, and inline credential detection.
 
 ### Output PII/Secrets Filter — Stop Data Leaks
 

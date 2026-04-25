@@ -30,6 +30,15 @@ from agent_guard.policies.rate_limit import RateLimiter
 from agent_guard.reliability.circuit_breaker import CircuitBreaker
 from agent_guard.reliability.slo import SLO
 from agent_guard.sandbox.executor import PermissionLevel, Sandbox
+from agent_guard.tokens.inventory import (
+    RiskLevel,
+    TokenInventory,
+    TokenRecord,
+    TokenStatus,
+)
+from agent_guard.tokens.policy import TokenPolicy
+from agent_guard.tokens.risk import RiskScorer
+from agent_guard.tokens.scanner import TokenScanner
 
 __version__ = "0.2.0"
 
@@ -65,4 +74,11 @@ __all__ = [
     "ObservabilityBus",
     "GuardEvent",
     "RateLimiter",
+    "TokenInventory",
+    "TokenRecord",
+    "TokenScanner",
+    "TokenPolicy",
+    "RiskScorer",
+    "RiskLevel",
+    "TokenStatus",
 ]

@@ -17,6 +17,7 @@ from typing import Any
 from agent_guard.audit.logger import AuditLog
 from agent_guard.core.engine import Guard
 from agent_guard.mcp.gateway import MCPGateway
+from agent_guard.tokens.inventory import TokenInventory
 
 _DASHBOARD_HTML = (Path(__file__).parent / "index.html").read_bytes
 
@@ -29,10 +30,12 @@ class DashboardState:
         guard: Guard,
         audit_log: AuditLog | None = None,
         gateway: MCPGateway | None = None,
+        token_inventory: TokenInventory | None = None,
     ):
         self.guard = guard
         self.audit_log = audit_log or AuditLog()
         self.gateway = gateway
+        self.token_inventory = token_inventory
         self._start_time = time.time()
 
     def overview(self) -> dict[str, Any]:
@@ -83,6 +86,24 @@ class DashboardState:
         calls = self.gateway.call_log[-limit:]
         return [c.model_dump() for c in calls]
 
+    def tokens(self) -> list[dict[str, Any]]:
+        if not self.token_inventory:
+            return []
+        return [t.to_summary() for t in self.token_inventory.list_tokens()]
+
+    def tokens_summary(self) -> dict[str, Any]:
+        if not self.token_inventory:
+            return {"total_tokens": 0}
+        return self.token_inventory.summary()
+
+    def tokens_stale(self, max_age_days: int = 90) -> list[dict[str, Any]]:
+        if not self.token_inventory:
+            return []
+        return [
+            t.to_summary()
+            for t in self.token_inventory.stale_tokens(max_age_days)
+        ]
+
 
 class _Handler(BaseHTTPRequestHandler):
     """HTTP request handler for the dashboard."""
@@ -105,6 +126,12 @@ class _Handler(BaseHTTPRequestHandler):
             self._json_response(self.state.policies())
         elif path == "/api/gateway":
             self._json_response(self.state.gateway_calls())
+        elif path == "/api/tokens":
+            self._json_response(self.state.tokens())
+        elif path == "/api/tokens/summary":
+            self._json_response(self.state.tokens_summary())
+        elif path == "/api/tokens/stale":
+            self._json_response(self.state.tokens_stale())
         else:
             self.send_error(404)
 
@@ -152,6 +179,7 @@ def run_dashboard(
     *,
     audit_log: AuditLog | None = None,
     gateway: MCPGateway | None = None,
+    token_inventory: TokenInventory | None = None,
     host: str = "127.0.0.1",
     port: int = 7700,
     open_browser: bool = True,
@@ -176,7 +204,12 @@ def run_dashboard(
         # With auth token (required for POST /api/kill-switch/*)
         run_dashboard(guard, auth_token="my-secret-token")
     """
-    state = DashboardState(guard, audit_log=audit_log, gateway=gateway)
+    state = DashboardState(
+        guard,
+        audit_log=audit_log,
+        gateway=gateway,
+        token_inventory=token_inventory,
+    )
 
     handler_class = type("Handler", (_Handler,), {"state": state, "auth_token": auth_token})
     server = HTTPServer((host, port), handler_class)

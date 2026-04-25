@@ -38,9 +38,10 @@ def info() -> None:
             "  • Execution sandboxing with permission levels\n"
             "  • Hash-chained audit logging\n"
             "  • Agent-to-agent secure mesh\n"
+            "  • Token governance — discover, inventory, risk-score credentials\n"
             "  • Runtime injection detection on tool arguments\n"
             "  • Output PII/secrets filtering & redaction\n"
-            "  • Real-time web dashboard\n"
+            "  • Real-time web dashboard with token monitoring\n"
             "  • Circuit breakers & SLO tracking\n"
             "  • LangChain, OpenAI, CrewAI, AutoGen integrations\n\n"
             "[bold]OWASP Agentic Top 10:[/bold] 10/10 risks covered",
@@ -235,6 +236,148 @@ def dashboard(host: str, port: int, no_browser: bool) -> None:
     console.print("[dim]Press Ctrl+C to stop[/dim]\n")
 
     run_dashboard(guard, host=host, port=port, open_browser=not no_browser)
+
+
+@main.group()
+def tokens() -> None:
+    """Token governance — discover, inventory, and audit access tokens."""
+    pass
+
+
+@tokens.command(name="scan")
+@click.option("--dotenv", "-e", default=None, help="Path to .env file to include")
+@click.option(
+    "--config", "-c", "config_path", default=None,
+    help="MCP/agent config JSON to scan",
+)
+def tokens_scan(dotenv: str | None, config_path: str | None) -> None:
+    """Scan environment and config files for access tokens."""
+    from agent_guard.tokens.inventory import TokenInventory
+    from agent_guard.tokens.risk import RiskScorer
+    from agent_guard.tokens.scanner import TokenScanner
+
+    inventory = TokenInventory()
+    scanner = TokenScanner(inventory=inventory)
+    scorer = RiskScorer()
+
+    records = scanner.scan_environment(dotenv_path=dotenv)
+    if config_path:
+        records += scanner.scan_config(config_path)
+
+    scorer.score_all(records)
+
+    if not records:
+        console.print("[yellow]No tokens discovered.[/yellow]")
+        return
+
+    table = Table(title=f"Discovered Tokens ({len(records)})")
+    table.add_column("Provider", style="cyan")
+    table.add_column("Type", style="white")
+    table.add_column("Masked Value", style="dim")
+    table.add_column("Source", style="yellow")
+    table.add_column("Detail", style="white")
+    table.add_column("Risk", justify="right")
+
+    for t in records:
+        risk_style = {
+            "critical": "bold red",
+            "high": "red",
+            "medium": "yellow",
+            "low": "green",
+        }.get(t.risk_level.value, "white")
+        table.add_row(
+            t.provider.value,
+            t.token_type.value,
+            t.masked_value,
+            t.source.value,
+            t.source_detail,
+            f"[{risk_style}]{t.risk_score} ({t.risk_level.value})[/{risk_style}]",
+        )
+
+    console.print(table)
+
+
+@tokens.command(name="list")
+@click.option("--risk", "-r", default=None, help="Filter by risk level")
+@click.option("--provider", "-p", default=None, help="Filter by provider")
+@click.option("--stale", is_flag=True, help="Show only stale tokens")
+@click.option("--max-age", default=90, type=int, help="Max age in days for stale")
+def tokens_list(
+    risk: str | None,
+    provider: str | None,
+    stale: bool,
+    max_age: int,
+) -> None:
+    """List discovered tokens with optional filters."""
+    from agent_guard.tokens.inventory import (
+        RiskLevel,
+        TokenInventory,
+        TokenProvider,
+    )
+    from agent_guard.tokens.risk import RiskScorer
+    from agent_guard.tokens.scanner import TokenScanner
+
+    inventory = TokenInventory()
+    scanner = TokenScanner(inventory=inventory)
+    scanner.scan_environment()
+    RiskScorer().score_all(list(inventory.list_tokens()))
+
+    risk_filter = None
+    if risk:
+        try:
+            risk_filter = RiskLevel(risk.lower())
+        except ValueError:
+            console.print(f"[red]Unknown risk level: {risk}[/red]")
+            return
+
+    provider_filter = None
+    if provider:
+        try:
+            provider_filter = TokenProvider(provider.lower())
+        except ValueError:
+            console.print(f"[red]Unknown provider: {provider}[/red]")
+            return
+
+    if stale:
+        records = inventory.stale_tokens(max_age)
+    else:
+        records = inventory.list_tokens(
+            risk_level=risk_filter,
+            provider=provider_filter,
+        )
+
+    if not records:
+        console.print("[yellow]No tokens match the filter.[/yellow]")
+        return
+
+    table = Table(title=f"Tokens ({len(records)})")
+    table.add_column("Provider", style="cyan")
+    table.add_column("Masked Value", style="dim")
+    table.add_column("Source", style="yellow")
+    table.add_column("Age (days)", justify="right")
+    table.add_column("Uses", justify="right")
+    table.add_column("Risk", justify="right")
+
+    for t in records:
+        risk_style = {
+            "critical": "bold red",
+            "high": "red",
+            "medium": "yellow",
+            "low": "green",
+        }.get(t.risk_level.value, "white")
+        table.add_row(
+            t.provider.value,
+            t.masked_value,
+            t.source_detail or t.source.value,
+            f"{t.age_days:.0f}",
+            str(t.use_count),
+            f"[{risk_style}]{t.risk_score}[/{risk_style}]",
+        )
+
+    console.print(table)
+
+
+main.add_command(tokens)
 
 
 @main.command()

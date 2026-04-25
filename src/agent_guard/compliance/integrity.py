@@ -43,6 +43,10 @@ GOVERNANCE_MODULES = [
     "agent_guard.reliability.slo",
     "agent_guard.compliance.attestation",
     "agent_guard.observability.hooks",
+    "agent_guard.tokens.scanner",
+    "agent_guard.tokens.inventory",
+    "agent_guard.tokens.risk",
+    "agent_guard.tokens.policy",
 ]
 
 
