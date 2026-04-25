@@ -18,6 +18,7 @@ class AuditEvent(BaseModel):
     event_id: str = ""
     timestamp: float = Field(default_factory=time.time)
     event_type: str = "policy_decision"
+    team_id: str = ""
     agent_id: str = ""
     action: str = ""
     allowed: bool = False

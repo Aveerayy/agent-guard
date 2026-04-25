@@ -47,6 +47,12 @@ GOVERNANCE_MODULES = [
     "agent_guard.tokens.inventory",
     "agent_guard.tokens.risk",
     "agent_guard.tokens.policy",
+    "agent_guard.server.config",
+    "agent_guard.server.auth",
+    "agent_guard.server.store",
+    "agent_guard.server.teams",
+    "agent_guard.server.proxy",
+    "agent_guard.server.app",
 ]
 
 

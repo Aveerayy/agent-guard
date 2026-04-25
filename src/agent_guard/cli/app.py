@@ -19,7 +19,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.2.0", prog_name="agent-guard")
+@click.version_option(version="0.3.0", prog_name="agent-guard")
 def main() -> None:
     """Agent Guard — Simple, powerful governance for AI agents."""
     pass
@@ -30,7 +30,7 @@ def info() -> None:
     """Show Agent Guard info and capabilities."""
     console.print(
         Panel.fit(
-            "[bold cyan]Agent Guard[/bold cyan] v0.2.0\n\n"
+            "[bold cyan]Agent Guard[/bold cyan] v0.3.0\n\n"
             "Simple, powerful governance for AI agents.\n\n"
             "[bold]Capabilities:[/bold]\n"
             "  • Policy engine with YAML rules & fluent Python API\n"
@@ -381,6 +381,42 @@ def tokens_list(
 
 
 main.add_command(tokens)
+
+
+@main.group(name="server")
+def server_group() -> None:
+    """Central MCP Gateway Server — manage and run the enterprise gateway."""
+    pass
+
+
+@server_group.command(name="run")
+@click.option("--config", "-c", "config_path", required=True, help="Path to gateway YAML config")
+@click.option("--host", "-h", default=None, help="Override bind address")
+@click.option("--port", "-p", default=None, type=int, help="Override port")
+def server_run(config_path: str, host: str | None, port: int | None) -> None:
+    """Start the central MCP gateway server."""
+    from agent_guard.server.app import run_server
+
+    console.print(
+        f"[cyan bold]Agent Guard Central Gateway[/cyan bold] starting...\n  Config: {config_path}"
+    )
+    run_server(config_path, host=host, port=port)
+
+
+@server_group.command(name="init")
+@click.option("--output", "-o", default="gateway.yaml", help="Output file path")
+def server_init(output: str) -> None:
+    """Generate a starter gateway configuration file."""
+    from agent_guard.server.config import default_config_yaml
+
+    Path(output).write_text(default_config_yaml())
+    console.print(f"[green bold]✓[/green bold] Gateway config written to {output}")
+    console.print("\n[bold]Next steps:[/bold]")
+    console.print(f"  1. Edit {output} to add upstreams and teams")
+    console.print(f"  2. Run: [cyan]agent-guard server run -c {output}[/cyan]")
+
+
+main.add_command(server_group)
 
 
 @main.command()

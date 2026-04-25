@@ -49,8 +49,9 @@ Agent Guard provides **application-level Python middleware governance**, not OS 
 
 | Version | Supported |
 |---------|-----------|
-| 0.2.x   | ✅ Current |
-| 0.1.x   | ⚠️ Security fixes only |
+| 0.3.x   | ✅ Current |
+| 0.2.x   | ⚠️ Security fixes only |
+| 0.1.x   | ❌ End of life |
 
 ## Disclosure Timeline
 

@@ -40,7 +40,7 @@ from agent_guard.tokens.policy import TokenPolicy
 from agent_guard.tokens.risk import RiskScorer
 from agent_guard.tokens.scanner import TokenScanner
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "Guard",

@@ -74,6 +74,7 @@ class TokenRecord(BaseModel):
     """A single tracked access token / credential."""
 
     token_id: str
+    team_id: str = ""
     provider: TokenProvider = TokenProvider.UNKNOWN
     token_type: TokenType = TokenType.UNKNOWN
     masked_value: str = ""
